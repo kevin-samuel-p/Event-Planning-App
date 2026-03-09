@@ -1,0 +1,6 @@
+Develop a Java Spring Boot project for the use case and reference documents provided in ./ref/ 
+You can find the Entity-Relationship model diagram, sequence diagram and activity diagrams in ref/diagrams/. 
+You are not to edit or modify any of these files, or include your own. 
+Create a separate Spring Boot project that compiles with JDK 21, uses Spring Boot 4.0/3.9 (4.0 is preferred), uses Spring Security for authentication and authorization, and build with Maven. The project's root location should be ./backend/ (create this directory if it doesn't exist).
+
+If you have any questions before starting, please do ask. 
