@@ -1,0 +1,125 @@
+erDiagram
+
+USER {
+    int user_id PK
+    string name
+    string email
+    string phone
+    string password
+    string role
+}
+
+EVENT {
+    int event_id PK
+    string event_name
+    date event_date
+    string venue
+    string event_type
+    int organizer_id FK
+}
+
+TASK {
+    int task_id PK
+    string task_name
+    string description
+    date deadline
+    string status
+    int event_id FK
+    int assigned_to FK
+}
+
+EVENT_VENDOR {
+    int event_vendor_id PK
+    int event_id FK
+    int vendor_id FK
+    string service_type
+    string contract_status
+}
+
+BUDGET {
+    int budget_id PK
+    int event_id FK
+    float total_budget
+    float spent_amount
+}
+
+PAYMENT {
+    int payment_id PK
+    int budget_id FK
+    int vendor_id FK
+    float amount
+    date payment_date
+    string payment_status
+}
+
+INVITATION {
+    int invitation_id PK
+    int event_id FK
+    int guest_id FK
+    string rsvp_status
+    date invitation_date
+    string custom_message
+}
+
+CHAT {
+    int chat_id PK
+    int event_id FK
+    string chat_type
+}
+
+CHAT_PARTICIPANT {
+    int participant_id PK
+    int chat_id FK
+    int user_id FK
+}
+
+MESSAGE {
+    int message_id PK
+    int chat_id FK
+    int sender_id FK
+    string message_text
+    datetime timestamp
+}
+
+NOTIFICATION {
+    int notification_id PK
+    int user_id FK
+    int event_id FK
+    string message
+    string status
+}
+
+FEEDBACK {
+    int feedback_id PK
+    int user_id FK
+    int event_id FK
+    int rating
+    string comments
+}
+
+USER ||--o{ EVENT : creates
+EVENT ||--o{ TASK : has
+USER ||--o{ TASK : assigned_to
+
+EVENT ||--|| BUDGET : has
+BUDGET ||--o{ PAYMENT : records
+USER ||--o{ PAYMENT : receives
+
+EVENT ||--o{ EVENT_VENDOR : includes
+USER ||--o{ EVENT_VENDOR : vendor
+
+EVENT ||--o{ INVITATION : sends
+USER ||--o{ INVITATION : receives
+
+EVENT ||--|| CHAT : group_chat
+CHAT ||--o{ CHAT_PARTICIPANT : has
+USER ||--o{ CHAT_PARTICIPANT : joins
+
+CHAT ||--o{ MESSAGE : contains
+USER ||--o{ MESSAGE : sends
+
+EVENT ||--o{ NOTIFICATION : generates
+USER ||--o{ NOTIFICATION : receives
+
+EVENT ||--o{ FEEDBACK : collects
+USER ||--o{ FEEDBACK : gives

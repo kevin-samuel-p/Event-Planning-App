@@ -1,0 +1,36 @@
+flowchart TD
+
+A[Start] --> B[Organizer logs into system]
+
+B --> C[Create Event]
+C --> D[Initialize Budget]
+
+D --> E[Add Vendors]
+E --> F[Assign Tasks to Team Members]
+
+F --> G[Send Invitations to Guests]
+
+G --> H{Guest RSVP?}
+
+H -- Yes --> I[Update RSVP Status]
+H -- No --> J[Send Reminder Notification]
+
+I --> K[Event Preparation]
+J --> K
+
+K --> L[Team Communication via Chat]
+L --> M[Monitor Task Progress]
+
+M --> N{Event Day}
+
+N --> O[Check Task Completion]
+O --> P[Resolve Last Minute Issues]
+
+P --> Q[Event Completed]
+
+Q --> R[Send Feedback Requests]
+
+R --> S[Collect Feedback]
+S --> T[Generate Event Report]
+
+T --> U[End]

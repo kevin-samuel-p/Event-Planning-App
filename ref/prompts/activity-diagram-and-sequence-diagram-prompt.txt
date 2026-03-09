@@ -1,0 +1,333 @@
+You are a senior software engineer. Draft a sequence diagram and activity diagram using the provided context, and justify your decisions for each action. Present the output with Mermaid Live sequence diagram syntax, and Mermaid live activity diagram syntax.  
+ER Model Abstract```1. USER Entity
+
+Represents all people using the application.
+
+Attributes
+
+* user_id (PK) – unique identifier
+* name
+* email
+* phone
+* password
+* role (organizer, vendor, team member, guest)
+
+The role attribute determines how the user interacts with the system.
+
+Relationships
+
+* USER -> EVENT (1:M)
+  One organizer can create many events.
+
+* USER -> TASK (1:M)
+  A team member can be assigned multiple tasks.
+
+* USER -> EVENT_VENDOR (1:M)
+  A vendor can participate in multiple events.
+
+* USER -> INVITATION (1:M)
+  A guest may receive multiple invitations.
+
+* USER -> MESSAGE (1:M)
+  A user can send many messages.
+
+* USER -> CHAT_PARTICIPANT (1:M)
+  A user can participate in multiple chats.
+
+* USER -> PAYMENT (1:M)
+  Vendors can receive multiple payments.
+
+* USER -> FEEDBACK (1:M)
+  A user can give multiple feedback entries.
+
+* USER -> NOTIFICATION (1:M)
+  Users receive many notifications.
+
+---
+
+2. EVENT Entity
+
+Represents an event being planned.
+
+Attributes
+
+* event_id (PK)
+* event_name
+* event_date
+* venue
+* event_type
+* organizer_id (FK)
+
+Relationships
+
+* EVENT -> TASK (1:M)
+  An event contains many tasks.
+
+* EVENT -> EVENT_VENDOR (1:M)
+  Multiple vendors can work in an event.
+
+* EVENT -> INVITATION (1:M)
+  Many invitations are sent for one event.
+
+* EVENT -> CHAT (1:1)
+  Each event has one group chat for coordination.
+
+* EVENT -> BUDGET (1:1)
+  Each event has a single budget.
+
+* EVENT -> FEEDBACK (1:M)
+  An event can collect feedback from many users.
+
+* EVENT -> NOTIFICATION (1:M)
+  Notifications related to event updates.
+
+---
+
+3. TASK Entity
+
+Represents work that must be completed for the event.
+
+Attributes
+
+* task_id (PK)
+* task_name
+* description
+* deadline
+* status
+* event_id (FK)
+* assigned_to (FK)
+
+Relationships
+
+* EVENT -> TASK (1:M)
+  One event has multiple tasks.
+
+* USER -> TASK (1:M)
+  A team member can handle multiple tasks.
+
+---
+
+4. EVENT_VENDOR Entity
+
+This is a junction entity that connects events and vendors.
+
+Attributes
+
+* event_vendor_id (PK)
+* event_id (FK)
+* vendor_id (FK)
+* service_type
+* contract_status
+
+Relationship
+
+* EVENT <-> VENDOR (M:M) resolved using EVENT_VENDOR
+
+Meaning:
+
+* One event can have many vendors.
+* One vendor can work in many events.
+
+---
+
+5. BUDGET Entity
+
+Tracks financial planning for an event.
+
+Attributes
+
+* budget_id (PK)
+* event_id (FK)
+* total_budget
+* spent_amount
+
+Relationship
+
+* EVENT -> BUDGET (1:1)
+  Each event has exactly one budget.
+
+---
+
+6. PAYMENT Entity
+
+Tracks payments made to vendors.
+
+Attributes
+
+* payment_id (PK)
+* budget_id (FK)
+* vendor_id (FK)
+* amount
+* payment_date
+* payment_status
+
+Relationships
+
+* BUDGET -> PAYMENT (1:M)
+  A budget can have many payments.
+
+* USER(Vendor) -> PAYMENT (1:M)
+  Vendors may receive multiple payments.
+
+---
+
+7. INVITATION Entity
+
+Handles guest invitations and RSVP tracking.
+
+Attributes
+
+* invitation_id (PK)
+* event_id (FK)
+* guest_id (FK)
+* rsvp_status
+* invitation_date
+* custom_message (NULLABLE)
+
+Relationships
+
+* EVENT -> INVITATION (1:M)
+  One event sends many invitations.
+
+* USER (Guest) -> INVITATION (1:M)
+  A guest can receive multiple invitations.
+
+---
+
+8. CHAT Entity
+
+Represents communication channels.
+
+Attributes
+
+* chat_id (PK)
+* event_id (FK)
+* chat_type (group or direct)
+
+Relationship
+
+* EVENT -> CHAT (1:1)
+  Each event has one group chat.
+
+Chats allow collaboration among team members and organizers.
+
+---
+
+9. CHAT_PARTICIPANT Entity
+
+Tracks users participating in chats.
+
+Attributes
+
+* participant_id (PK)
+* chat_id (FK)
+* user_id (FK)
+
+Relationships
+
+* CHAT -> CHAT_PARTICIPANT (1:M)
+  A chat can have many participants.
+
+* USER -> CHAT_PARTICIPANT (1:M)
+  A user can participate in multiple chats.
+
+---
+
+10. MESSAGE Entity
+
+Stores chat messages.
+
+Attributes
+
+* message_id (PK)
+* chat_id (FK)
+* sender_id (FK)
+* message_text
+* timestamp
+
+Relationships
+
+* CHAT -> MESSAGE (1:M)
+  A chat contains many messages.
+
+* USER -> MESSAGE (1:M)
+  A user can send many messages.
+
+---
+
+ 11. NOTIFICATION Entity
+
+Handles alerts and updates.
+
+Attributes
+
+* notification_id (PK)
+* user_id (FK)
+* event_id (FK)
+* message
+* status
+
+ Relationships
+
+* EVENT -> NOTIFICATION (1:M)
+  Events generate notifications.
+
+* USER -> NOTIFICATION (1:M)
+  Users receive notifications.
+
+---
+
+ 12. FEEDBACK Entity
+
+Stores feedback after event completion.
+
+Attributes
+
+* feedback_id (PK)
+* user_id (FK)
+* event_id (FK)
+* rating
+* comments
+
+ Relationships
+
+* EVENT -> FEEDBACK (1:M)
+  Events collect multiple feedback responses.
+
+* USER -> FEEDBACK (1:M)
+  Users can give feedback.
+
+---
+
+ Overall Flow of the System
+
+1. Organizer (User) creates an Event.
+2. Tasks are assigned to team members.
+3. Vendors are connected using Event_Vendor.
+4. Budget and Payments track finances.
+5. Guests receive Invitations and RSVP.
+6. Communication happens through Chats and Messages.
+7. Notifications keep users updated.
+8. After the event, Feedback is collected.
+
+---
+
+COMPLETE WORKFLOW OF SYSTEM
+event creation 
+task management 
+vendor coordination 
+budgeting 
+guest management 
+communication 
+feedback
+```
+Use Case:```Event Planning App
+The primary use case for an event planning app is to provide a central platform where organisers can plan, track, and manage every aspect of an event from conception to completion. The app simplifies communication, scheduling, task allocation, vendor management, budgeting, and attendee engagement, making event execution seamless and hassle-free.
+1.	Event Creation: The organiser initiates the event by entering basic details such as event name, date, venue, and type (e.g., wedding, conference, festival).
+2.	Task Assignment: The organiser uses the app to allocate tasks (e.g., decoration, catering, invitations) to team members or vendors, specifying deadlines and responsibilities.
+3.	Budget Tracking: The app enables setting up a budget, tracking expenditures, and monitoring payments to vendors, ensuring financial transparency and control.
+4.	Vendor Management: Organisers can select vendors from a marketplace, review ratings, negotiate contracts, and track vendor deliverables through the app.
+5.	Guest Management: The app allows sending digital invitations, collecting RSVPs, maintaining guest lists, and tracking attendance.
+6.	Collaboration and Communication: Team members can communicate via chat or messaging features, share documents, and receive real-time updates on assigned tasks.
+7.	Event Day Coordination: On the event day, organisers use the app to monitor progress, check task completion, and address last-minute issues.
+8.	Post-Event Feedback: After the event, the app facilitates feedback collection, sharing of event photos/videos, and analysis of success metrics.```

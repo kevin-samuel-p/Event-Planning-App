@@ -1,0 +1,50 @@
+sequenceDiagram
+participant Organizer
+participant System
+participant Database
+participant TeamMember
+participant Vendor
+participant Guest
+participant ChatService
+participant NotificationService
+
+Organizer->>System: Login
+System->>Database: Verify user credentials
+Database-->>System: Authentication success
+System-->>Organizer: Access dashboard
+
+Organizer->>System: Create Event (name, date, venue)
+System->>Database: Store Event
+Database-->>System: Event created
+System->>NotificationService: Notify team members
+
+Organizer->>System: Assign Task
+System->>Database: Save task details
+System->>NotificationService: Notify assigned user
+NotificationService-->>TeamMember: Task assigned notification
+
+Organizer->>System: Add Vendor
+System->>Database: Create EVENT_VENDOR entry
+Database-->>System: Vendor linked to event
+System->>NotificationService: Notify vendor
+NotificationService-->>Vendor: Vendor assignment notification
+
+Organizer->>System: Send Invitations
+System->>Database: Save invitation records
+System->>NotificationService: Notify guests
+NotificationService-->>Guest: Invitation received
+
+Guest->>System: Submit RSVP
+System->>Database: Update RSVP status
+
+TeamMember->>ChatService: Send message
+ChatService->>Database: Store message
+ChatService-->>Organizer: Deliver message
+
+Organizer->>System: Mark event completed
+System->>NotificationService: Request feedback
+
+Guest->>System: Submit Feedback
+System->>Database: Store feedback
+Database-->>System: Feedback saved
+System-->>Organizer: Feedback report available

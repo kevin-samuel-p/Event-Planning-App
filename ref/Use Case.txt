@@ -1,0 +1,10 @@
+Event Planning App
+The primary use case for an event planning app is to provide a central platform where organisers can plan, track, and manage every aspect of an event from conception to completion. The app simplifies communication, scheduling, task allocation, vendor management, budgeting, and attendee engagement, making event execution seamless and hassle-free.
+1.	Event Creation: The organiser initiates the event by entering basic details such as event name, date, venue, and type (e.g., wedding, conference, festival).
+2.	Task Assignment: The organiser uses the app to allocate tasks (e.g., decoration, catering, invitations) to team members or vendors, specifying deadlines and responsibilities.
+3.	Budget Tracking: The app enables setting up a budget, tracking expenditures, and monitoring payments to vendors, ensuring financial transparency and control.
+4.	Vendor Management: Organisers can select vendors from a marketplace, review ratings, negotiate contracts, and track vendor deliverables through the app.
+5.	Guest Management: The app allows sending digital invitations, collecting RSVPs, maintaining guest lists, and tracking attendance.
+6.	Collaboration and Communication: Team members can communicate via chat or messaging features, share documents, and receive real-time updates on assigned tasks.
+7.	Event Day Coordination: On the event day, organisers use the app to monitor progress, check task completion, and address last-minute issues.
+8.	Post-Event Feedback: After the event, the app facilitates feedback collection, sharing of event photos/videos, and analysis of success metrics.
