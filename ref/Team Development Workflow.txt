@@ -1,0 +1,203 @@
+Here’s a **simple but professional Git workflow** that works really well for **4–5 person student teams** on GitHub. It keeps things organized and **greatly reduces merge conflicts**.
+
+---
+
+# Recommended Branch Structure
+
+Use **three main branch types**:
+
+```
+main        → stable, final project version
+dev         → integration branch for team work
+feature/*   → individual work branches
+```
+
+### Purpose
+
+| Branch        | Who uses it           | Purpose                 |
+| ------------- | --------------------- | ----------------------- |
+| `main`        | only you (maintainer) | final stable code       |
+| `dev`         | team PRs              | combine everyone’s work |
+| `feature/...` | each teammate         | individual tasks        |
+
+---
+
+# Step 1 — Create the `dev` Branch
+
+From your repo:
+
+```bash
+git checkout -b dev
+git push origin dev
+```
+
+Now your repo has:
+
+```
+main
+dev
+```
+
+---
+
+# Step 2 — Protect Both Branches
+
+In **Settings → Rulesets** on GitHub create rules:
+
+### Protect `main`
+
+Require:
+
+* PR
+* 1 approval
+* no direct push
+
+Only **you merge to main**.
+
+---
+
+### Protect `dev`
+
+Require:
+
+* PR
+* 1 approval (can be any teammate)
+
+This ensures nobody pushes directly.
+
+---
+
+# Step 3 — Teammate Workflow
+
+Each teammate works in **their own branch**.
+
+Example:
+
+```bash
+git checkout dev
+git pull origin dev
+git checkout -b feature/login-system
+```
+
+Work → commit → push:
+
+```bash
+git push origin feature/login-system
+```
+
+Then create PR:
+
+```
+feature/login-system → dev
+```
+
+---
+
+# Step 4 — Integration Flow
+
+```
+feature branch
+     ↓ PR
+    dev
+     ↓ (when stable)
+    main
+```
+
+Meaning:
+
+1. Teammates merge features → **dev**
+2. When dev is stable → **you merge dev → main**
+
+---
+
+# Step 5 — Naming Convention (important)
+
+Use clear branch names:
+
+```
+feature/login
+feature/database-schema
+feature/ui-dashboard
+bugfix/auth-error
+docs/report-update
+```
+
+This makes PRs readable.
+
+---
+
+# Step 6 — Pull Before Starting Work
+
+Teammates should always do:
+
+```bash
+git checkout dev
+git pull origin dev
+```
+
+before creating a new feature branch.
+
+This avoids conflicts.
+
+---
+
+# Step 7 — Good Commit Messages
+
+Use structured commits:
+
+```
+feat: add login API
+fix: resolve authentication bug
+docs: update README
+refactor: simplify database query
+```
+
+---
+
+# Example for Your 4-Person Team
+
+| Member   | Branch                 |
+| -------- | ---------------------- |
+| You      | review + merge         |
+| Member A | `feature/backend-auth` |
+| Member B | `feature/frontend-ui`  |
+| Member C | `feature/database`     |
+
+All merge → `dev`.
+
+You periodically merge → `main`.
+
+---
+
+# Bonus: Prevent “PR Chaos”
+
+Enable in your ruleset:
+
+✔ Require **1 approval**
+✔ Require **conversation resolution**
+✔ Prevent **force push**
+
+---
+
+# Final Repository Structure
+
+```
+main
+dev
+feature/login
+feature/ui
+feature/db
+```
+
+---
+
+✅ **Why this workflow works well**
+
+* prevents breaking the main project
+* teammates don’t overwrite each other
+* PR reviews stay manageable
+* supervisor can easily track progress
+
+---
+
+💡 If you'd like, I can also show you **one extremely useful GitHub feature most student teams don't use: *GitHub Projects (Kanban board)*** that lets you manage tasks like Trello **inside the repo** and automatically link them to PRs. It’s very useful for team grading and supervisor visibility.
