@@ -1,0 +1,14 @@
+package com.eventplanning.backend.budget;
+
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.NotNull;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+public record CreatePaymentRequest(
+        @NotNull Long vendorId,
+        @NotNull @DecimalMin("0.0") BigDecimal amount,
+        @NotNull LocalDate paymentDate,
+        @NotNull PaymentStatus paymentStatus
+) {
+}

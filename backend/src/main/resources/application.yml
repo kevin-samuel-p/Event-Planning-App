@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:eventdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  h2:
+    console:
+      enabled: true
+
+server:
+  port: 8080
+
+app:
+  jwt:
+    secret: change-me-to-a-very-long-secret-key-for-hs256-signing
+    expiration-minutes: 180

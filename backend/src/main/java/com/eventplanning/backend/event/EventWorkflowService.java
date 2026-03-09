@@ -1,0 +1,407 @@
+package com.eventplanning.backend.event;
+
+import com.eventplanning.backend.budget.Budget;
+import com.eventplanning.backend.budget.BudgetRepository;
+import com.eventplanning.backend.budget.BudgetResponse;
+import com.eventplanning.backend.budget.CreateBudgetRequest;
+import com.eventplanning.backend.budget.CreatePaymentRequest;
+import com.eventplanning.backend.budget.Payment;
+import com.eventplanning.backend.budget.PaymentRepository;
+import com.eventplanning.backend.budget.PaymentResponse;
+import com.eventplanning.backend.budget.PaymentStatus;
+import com.eventplanning.backend.chat.AddChatParticipantRequest;
+import com.eventplanning.backend.chat.Chat;
+import com.eventplanning.backend.chat.ChatParticipant;
+import com.eventplanning.backend.chat.ChatParticipantRepository;
+import com.eventplanning.backend.chat.ChatRepository;
+import com.eventplanning.backend.chat.ChatType;
+import com.eventplanning.backend.chat.Message;
+import com.eventplanning.backend.chat.MessageRepository;
+import com.eventplanning.backend.chat.MessageResponse;
+import com.eventplanning.backend.chat.SendMessageRequest;
+import com.eventplanning.backend.common.BadRequestException;
+import com.eventplanning.backend.common.CurrentUserProvider;
+import com.eventplanning.backend.common.NotFoundException;
+import com.eventplanning.backend.feedback.CreateFeedbackRequest;
+import com.eventplanning.backend.feedback.Feedback;
+import com.eventplanning.backend.feedback.FeedbackRepository;
+import com.eventplanning.backend.feedback.FeedbackResponse;
+import com.eventplanning.backend.invitation.CreateInvitationRequest;
+import com.eventplanning.backend.invitation.Invitation;
+import com.eventplanning.backend.invitation.InvitationRepository;
+import com.eventplanning.backend.invitation.InvitationResponse;
+import com.eventplanning.backend.invitation.RsvpStatus;
+import com.eventplanning.backend.invitation.UpdateRsvpRequest;
+import com.eventplanning.backend.notification.Notification;
+import com.eventplanning.backend.notification.NotificationRepository;
+import com.eventplanning.backend.notification.NotificationResponse;
+import com.eventplanning.backend.notification.NotificationStatus;
+import com.eventplanning.backend.task.CreateTaskRequest;
+import com.eventplanning.backend.task.Task;
+import com.eventplanning.backend.task.TaskRepository;
+import com.eventplanning.backend.task.TaskResponse;
+import com.eventplanning.backend.task.TaskStatus;
+import com.eventplanning.backend.task.UpdateTaskStatusRequest;
+import com.eventplanning.backend.user.Role;
+import com.eventplanning.backend.user.User;
+import com.eventplanning.backend.user.UserRepository;
+import com.eventplanning.backend.vendor.CreateEventVendorRequest;
+import com.eventplanning.backend.vendor.EventVendor;
+import com.eventplanning.backend.vendor.EventVendorRepository;
+import com.eventplanning.backend.vendor.EventVendorResponse;
+import jakarta.transaction.Transactional;
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.util.List;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.stereotype.Service;
+
+@Service
+@Transactional
+public class EventWorkflowService {
+
+    private final CurrentUserProvider currentUserProvider;
+    private final UserRepository userRepository;
+    private final EventRepository eventRepository;
+    private final TaskRepository taskRepository;
+    private final EventVendorRepository eventVendorRepository;
+    private final BudgetRepository budgetRepository;
+    private final PaymentRepository paymentRepository;
+    private final InvitationRepository invitationRepository;
+    private final ChatRepository chatRepository;
+    private final ChatParticipantRepository chatParticipantRepository;
+    private final MessageRepository messageRepository;
+    private final NotificationRepository notificationRepository;
+    private final FeedbackRepository feedbackRepository;
+
+    public EventWorkflowService(CurrentUserProvider currentUserProvider, UserRepository userRepository,
+                                EventRepository eventRepository, TaskRepository taskRepository,
+                                EventVendorRepository eventVendorRepository, BudgetRepository budgetRepository,
+                                PaymentRepository paymentRepository, InvitationRepository invitationRepository,
+                                ChatRepository chatRepository, ChatParticipantRepository chatParticipantRepository,
+                                MessageRepository messageRepository, NotificationRepository notificationRepository,
+                                FeedbackRepository feedbackRepository) {
+        this.currentUserProvider = currentUserProvider;
+        this.userRepository = userRepository;
+        this.eventRepository = eventRepository;
+        this.taskRepository = taskRepository;
+        this.eventVendorRepository = eventVendorRepository;
+        this.budgetRepository = budgetRepository;
+        this.paymentRepository = paymentRepository;
+        this.invitationRepository = invitationRepository;
+        this.chatRepository = chatRepository;
+        this.chatParticipantRepository = chatParticipantRepository;
+        this.messageRepository = messageRepository;
+        this.notificationRepository = notificationRepository;
+        this.feedbackRepository = feedbackRepository;
+    }
+
+    public EventResponse createEvent(CreateEventRequest request) {
+        User organizer = currentUserProvider.requireCurrentUser();
+        requireRole(organizer, Role.ORGANIZER);
+
+        Event event = eventRepository.save(Event.builder()
+                .eventName(request.eventName())
+                .eventDate(request.eventDate())
+                .venue(request.venue())
+                .eventType(request.eventType())
+                .organizer(organizer)
+                .build());
+
+        Chat chat = chatRepository.save(Chat.builder()
+                .event(event)
+                .chatType(ChatType.GROUP)
+                .build());
+
+        chatParticipantRepository.save(ChatParticipant.builder()
+                .chat(chat)
+                .user(organizer)
+                .build());
+
+        return EventResponse.from(event);
+    }
+
+    public List<EventResponse> myEvents() {
+        User organizer = currentUserProvider.requireCurrentUser();
+        requireRole(organizer, Role.ORGANIZER);
+        return eventRepository.findByOrganizerId(organizer.getId()).stream().map(EventResponse::from).toList();
+    }
+
+    public BudgetResponse createBudget(Long eventId, CreateBudgetRequest request) {
+        Event event = getOwnedEvent(eventId);
+        budgetRepository.findByEventId(eventId).ifPresent(existing -> {
+            throw new BadRequestException("Budget already exists for event");
+        });
+
+        Budget budget = budgetRepository.save(Budget.builder()
+                .event(event)
+                .totalBudget(request.totalBudget())
+                .spentAmount(BigDecimal.ZERO)
+                .build());
+
+        notifyUser(event.getOrganizer(), event, "Budget initialized for event " + event.getEventName());
+        return BudgetResponse.from(budget);
+    }
+
+    public EventVendorResponse addVendor(Long eventId, CreateEventVendorRequest request) {
+        Event event = getOwnedEvent(eventId);
+        User vendor = userRepository.findById(request.vendorId())
+                .orElseThrow(() -> new NotFoundException("Vendor user not found"));
+        if (vendor.getRole() != Role.VENDOR) {
+            throw new BadRequestException("Selected user is not a vendor");
+        }
+
+        EventVendor eventVendor = eventVendorRepository.save(EventVendor.builder()
+                .event(event)
+                .vendor(vendor)
+                .serviceType(request.serviceType())
+                .contractStatus(request.contractStatus())
+                .build());
+
+        notifyUser(vendor, event, "You have been added to event " + event.getEventName());
+        return EventVendorResponse.from(eventVendor);
+    }
+
+    public TaskResponse addTask(Long eventId, CreateTaskRequest request) {
+        Event event = getOwnedEvent(eventId);
+        User assignee = userRepository.findById(request.assignedToUserId())
+                .orElseThrow(() -> new NotFoundException("Assigned user not found"));
+
+        if (assignee.getRole() != Role.TEAM_MEMBER && assignee.getRole() != Role.VENDOR) {
+            throw new BadRequestException("Task can be assigned only to team members or vendors");
+        }
+
+        Task task = taskRepository.save(Task.builder()
+                .taskName(request.taskName())
+                .description(request.description())
+                .deadline(request.deadline())
+                .status(TaskStatus.TODO)
+                .event(event)
+                .assignedTo(assignee)
+                .build());
+
+        notifyUser(assignee, event, "Task assigned: " + task.getTaskName());
+        return TaskResponse.from(task);
+    }
+
+    public TaskResponse updateTaskStatus(Long taskId, UpdateTaskStatusRequest request) {
+        User actor = currentUserProvider.requireCurrentUser();
+        Task task = taskRepository.findById(taskId).orElseThrow(() -> new NotFoundException("Task not found"));
+
+        boolean isOwnerOrganizer = actor.getRole() == Role.ORGANIZER
+                && task.getEvent().getOrganizer().getId().equals(actor.getId());
+        boolean isAssignee = task.getAssignedTo().getId().equals(actor.getId());
+        if (!isOwnerOrganizer && !isAssignee) {
+            throw new AccessDeniedException("Only organizer or assignee can update task");
+        }
+
+        task.setStatus(request.status());
+        Task updated = taskRepository.save(task);
+        notifyUser(updated.getEvent().getOrganizer(), updated.getEvent(),
+                "Task status updated: " + updated.getTaskName() + " -> " + updated.getStatus());
+        return TaskResponse.from(updated);
+    }
+
+    public InvitationResponse sendInvitation(Long eventId, CreateInvitationRequest request) {
+        Event event = getOwnedEvent(eventId);
+        User guest = userRepository.findById(request.guestId())
+                .orElseThrow(() -> new NotFoundException("Guest user not found"));
+        if (guest.getRole() != Role.GUEST) {
+            throw new BadRequestException("Selected user is not a guest");
+        }
+
+        Invitation invitation = invitationRepository.save(Invitation.builder()
+                .event(event)
+                .guest(guest)
+                .rsvpStatus(RsvpStatus.PENDING)
+                .invitationDate(LocalDate.now())
+                .customMessage(request.customMessage())
+                .build());
+
+        notifyUser(guest, event, "Invitation received for event " + event.getEventName());
+        return InvitationResponse.from(invitation);
+    }
+
+    public InvitationResponse updateRsvp(Long invitationId, UpdateRsvpRequest request) {
+        User guest = currentUserProvider.requireCurrentUser();
+        Invitation invitation = invitationRepository.findById(invitationId)
+                .orElseThrow(() -> new NotFoundException("Invitation not found"));
+
+        if (!invitation.getGuest().getId().equals(guest.getId())) {
+            throw new AccessDeniedException("Only invited guest can update RSVP");
+        }
+
+        invitation.setRsvpStatus(request.rsvpStatus());
+        Invitation updated = invitationRepository.save(invitation);
+        notifyUser(updated.getEvent().getOrganizer(), updated.getEvent(),
+                "RSVP updated by " + guest.getName() + " to " + updated.getRsvpStatus());
+        return InvitationResponse.from(updated);
+    }
+
+    public PaymentResponse addPayment(Long budgetId, CreatePaymentRequest request) {
+        User organizer = currentUserProvider.requireCurrentUser();
+        requireRole(organizer, Role.ORGANIZER);
+
+        Budget budget = budgetRepository.findById(budgetId).orElseThrow(() -> new NotFoundException("Budget not found"));
+        if (!budget.getEvent().getOrganizer().getId().equals(organizer.getId())) {
+            throw new AccessDeniedException("Only event organizer can add payments");
+        }
+
+        User vendor = userRepository.findById(request.vendorId())
+                .orElseThrow(() -> new NotFoundException("Vendor not found"));
+        if (vendor.getRole() != Role.VENDOR) {
+            throw new BadRequestException("Selected user is not a vendor");
+        }
+
+        Payment payment = paymentRepository.save(Payment.builder()
+                .budget(budget)
+                .vendor(vendor)
+                .amount(request.amount())
+                .paymentDate(request.paymentDate())
+                .paymentStatus(request.paymentStatus())
+                .build());
+
+        if (request.paymentStatus() == PaymentStatus.PAID) {
+            budget.setSpentAmount(budget.getSpentAmount().add(request.amount()));
+            budgetRepository.save(budget);
+        }
+
+        notifyUser(vendor, budget.getEvent(), "Payment update: " + request.paymentStatus() + " amount " + request.amount());
+        return PaymentResponse.from(payment);
+    }
+
+    public void addChatParticipant(Long eventId, AddChatParticipantRequest request) {
+        Event event = getOwnedEvent(eventId);
+        User participant = userRepository.findById(request.userId())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        Chat chat = chatRepository.findByEventId(event.getId())
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+
+        if (!chatParticipantRepository.existsByChatIdAndUserId(chat.getId(), participant.getId())) {
+            chatParticipantRepository.save(ChatParticipant.builder().chat(chat).user(participant).build());
+            notifyUser(participant, event, "Added to event chat for " + event.getEventName());
+        }
+    }
+
+    public MessageResponse sendMessage(Long eventId, SendMessageRequest request) {
+        User sender = currentUserProvider.requireCurrentUser();
+        Chat chat = chatRepository.findByEventId(eventId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+
+        if (!chatParticipantRepository.existsByChatIdAndUserId(chat.getId(), sender.getId())) {
+            throw new AccessDeniedException("User is not a participant in this chat");
+        }
+
+        Message message = messageRepository.save(Message.builder()
+                .chat(chat)
+                .sender(sender)
+                .messageText(request.messageText())
+                .timestamp(Instant.now())
+                .build());
+
+        return MessageResponse.from(message);
+    }
+
+    public List<MessageResponse> listMessages(Long eventId) {
+        User user = currentUserProvider.requireCurrentUser();
+        Chat chat = chatRepository.findByEventId(eventId)
+                .orElseThrow(() -> new NotFoundException("Chat not found"));
+
+        if (!chatParticipantRepository.existsByChatIdAndUserId(chat.getId(), user.getId())) {
+            throw new AccessDeniedException("User is not a participant in this chat");
+        }
+
+        return messageRepository.findByChatIdOrderByTimestampAsc(chat.getId()).stream().map(MessageResponse::from).toList();
+    }
+
+    public List<NotificationResponse> myNotifications() {
+        User user = currentUserProvider.requireCurrentUser();
+        return notificationRepository.findByUserIdOrderByIdDesc(user.getId()).stream().map(NotificationResponse::from).toList();
+    }
+
+    public NotificationResponse markNotificationRead(Long notificationId) {
+        User user = currentUserProvider.requireCurrentUser();
+        Notification notification = notificationRepository.findById(notificationId)
+                .orElseThrow(() -> new NotFoundException("Notification not found"));
+        if (!notification.getUser().getId().equals(user.getId())) {
+            throw new AccessDeniedException("Cannot update another user's notification");
+        }
+
+        notification.setStatus(NotificationStatus.READ);
+        return NotificationResponse.from(notificationRepository.save(notification));
+    }
+
+    public FeedbackResponse submitFeedback(Long eventId, CreateFeedbackRequest request) {
+        User user = currentUserProvider.requireCurrentUser();
+        Event event = eventRepository.findById(eventId).orElseThrow(() -> new NotFoundException("Event not found"));
+
+        Feedback feedback = feedbackRepository.save(Feedback.builder()
+                .event(event)
+                .user(user)
+                .rating(request.rating())
+                .comments(request.comments())
+                .build());
+
+        notifyUser(event.getOrganizer(), event, "New feedback submitted for event " + event.getEventName());
+        return FeedbackResponse.from(feedback);
+    }
+
+    public void completeEvent(Long eventId) {
+        Event event = getOwnedEvent(eventId);
+        List<Invitation> invitations = invitationRepository.findByEventId(eventId);
+        for (Invitation invitation : invitations) {
+            notifyUser(invitation.getGuest(), event, "Event completed. Please submit your feedback.");
+        }
+    }
+
+    public EventReportResponse generateReport(Long eventId) {
+        getOwnedEvent(eventId);
+
+        List<Task> tasks = taskRepository.findByEventId(eventId);
+        List<Invitation> invitations = invitationRepository.findByEventId(eventId);
+        List<Feedback> feedbacks = feedbackRepository.findByEventId(eventId);
+
+        long completedTasks = tasks.stream().filter(t -> t.getStatus() == TaskStatus.COMPLETED).count();
+        long acceptedInvitations = invitations.stream().filter(i -> i.getRsvpStatus() == RsvpStatus.ACCEPTED).count();
+        double averageRating = feedbacks.stream().mapToInt(Feedback::getRating).average().orElse(0);
+
+        return new EventReportResponse(
+                eventId,
+                tasks.size(),
+                completedTasks,
+                invitations.size(),
+                acceptedInvitations,
+                feedbacks.size(),
+                averageRating
+        );
+    }
+
+    private Event getOwnedEvent(Long eventId) {
+        User organizer = currentUserProvider.requireCurrentUser();
+        requireRole(organizer, Role.ORGANIZER);
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event not found"));
+        if (!event.getOrganizer().getId().equals(organizer.getId())) {
+            throw new AccessDeniedException("Only organizer who created event can manage it");
+        }
+        return event;
+    }
+
+    private void notifyUser(User user, Event event, String message) {
+        notificationRepository.save(Notification.builder()
+                .user(user)
+                .event(event)
+                .message(message)
+                .status(NotificationStatus.UNREAD)
+                .build());
+    }
+
+    private void requireRole(User user, Role expectedRole) {
+        if (user.getRole() != expectedRole) {
+            throw new AccessDeniedException("Operation requires role " + expectedRole);
+        }
+    }
+}
