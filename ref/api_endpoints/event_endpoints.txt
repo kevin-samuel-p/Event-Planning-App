@@ -1,0 +1,118 @@
+HTTP POST
+URL: http://localhost:8080/api/events
+Input-Type: RequestBody
+Input: CreateEventRequest
+Response: EventResponse
+Desc: Create a new event
+
+HTTP GET
+URL: http://localhost:8080/api/events/my
+Input-Type: None
+Input: NULL
+Response: List<EventResponse>
+Desc: Get all events for the current user
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/budget
+Input-Type: Mixed
+Input: eventId (PathVariable), CreateBudgetRequest (RequestBody)
+Response: BudgetResponse
+Desc: Create a budget for an event
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/vendors
+Input-Type: Mixed
+Input: eventId (PathVariable), CreateEventVendorRequest (RequestBody)
+Response: EventVendorResponse
+Desc: Add a vendor to an event
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/tasks
+Input-Type: Mixed
+Input: eventId (PathVariable), CreateTaskRequest (RequestBody)
+Response: TaskResponse
+Desc: Add a task to an event
+
+HTTP PATCH
+URL: http://localhost:8080/api/tasks/{taskId}/status
+Input-Type: Mixed
+Input: taskId (PathVariable), UpdateTaskStatusRequest (RequestBody)
+Response: TaskResponse
+Desc: Update the status of a task
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/invitations
+Input-Type: Mixed
+Input: eventId (PathVariable), CreateInvitationRequest (RequestBody)
+Response: InvitationResponse
+Desc: Send an invitation for an event
+
+HTTP PATCH
+URL: http://localhost:8080/api/invitations/{invitationId}/rsvp
+Input-Type: Mixed
+Input: invitationId (PathVariable), UpdateRsvpRequest (RequestBody)
+Response: InvitationResponse
+Desc: Update RSVP status for an invitation
+
+HTTP POST
+URL: http://localhost:8080/api/budgets/{budgetId}/payments
+Input-Type: Mixed
+Input: budgetId (PathVariable), CreatePaymentRequest (RequestBody)
+Response: PaymentResponse
+Desc: Add a payment to a budget
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/chat/participants
+Input-Type: Mixed
+Input: eventId (PathVariable), AddChatParticipantRequest (RequestBody)
+Response: void
+Desc: Add a participant to event chat
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/chat/messages
+Input-Type: Mixed
+Input: eventId (PathVariable), SendMessageRequest (RequestBody)
+Response: MessageResponse
+Desc: Send a message in event chat
+
+HTTP GET
+URL: http://localhost:8080/api/events/{eventId}/chat/messages
+Input-Type: PathParam
+Input: eventId (integer)
+Response: List<MessageResponse>
+Desc: Get all messages for an event chat
+
+HTTP GET
+URL: http://localhost:8080/api/notifications/me
+Input-Type: None
+Input: NULL
+Response: List<NotificationResponse>
+Desc: Get all notifications for the current user
+
+HTTP PATCH
+URL: http://localhost:8080/api/notifications/{notificationId}/read
+Input-Type: PathParam
+Input: notificationId (integer)
+Response: NotificationResponse
+Desc: Mark a notification as read
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/feedback
+Input-Type: Mixed
+Input: eventId (PathVariable), CreateFeedbackRequest (RequestBody)
+Response: FeedbackResponse
+Desc: Submit feedback for an event
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/complete
+Input-Type: PathParam
+Input: eventId (integer)
+Response: void
+Desc: Mark an event as completed
+
+HTTP GET
+URL: http://localhost:8080/api/events/{eventId}/report
+Input-Type: PathParam
+Input: eventId (integer)
+Response: EventReportResponse
+Desc: Generate a report for an event

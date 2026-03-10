@@ -1,0 +1,13 @@
+HTTP POST
+URL: http://localhost:8080/api/auth/register
+Input-Type: RequestBody
+Input: RegisterRequest
+Response: AuthResponse
+Desc: Register a new user account
+
+HTTP POST
+URL: http://localhost:8080/api/auth/login
+Input-Type: RequestBody
+Input: LoginRequest
+Response: AuthResponse
+Desc: Authenticate user and return auth token
