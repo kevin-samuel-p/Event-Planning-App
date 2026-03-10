@@ -1,13 +1,17 @@
 HTTP POST
 URL: http://localhost:8080/api/auth/register
 Input-Type: RequestBody
-Input: RegisterRequest
-Response: AuthResponse
-Desc: Register a new user account
+Input: name (string), email (string), phone (string), password (string, min 8), role (Role: ORGANIZER|VENDOR|TEAM_MEMBER|GUEST)
+Response: AuthResponse { userId (long), email (string), role (Role), token (string) }
+Desc: Register a new user account.
+Sample-Request: {"name":"Asha Patel","email":"asha@example.com","phone":"+1-555-0100","password":"Password123","role":"ORGANIZER"}
+Sample-Response: {"userId":1,"email":"asha@example.com","role":"ORGANIZER","token":"eyJhbGciOiJIUzI1NiJ9.mock"}
 
 HTTP POST
 URL: http://localhost:8080/api/auth/login
 Input-Type: RequestBody
-Input: LoginRequest
-Response: AuthResponse
-Desc: Authenticate user and return auth token
+Input: email (string), password (string)
+Response: AuthResponse { userId (long), email (string), role (Role), token (string) }
+Desc: Authenticate a user and return a token.
+Sample-Request: {"email":"asha@example.com","password":"Password123"}
+Sample-Response: {"userId":1,"email":"asha@example.com","role":"ORGANIZER","token":"eyJhbGciOiJIUzI1NiJ9.mock"}

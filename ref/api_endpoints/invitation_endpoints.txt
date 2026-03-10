@@ -1,0 +1,17 @@
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/invitations
+Input-Type: Mixed
+Input: eventId (long), guestId (long), customMessage (string, optional)
+Response: InvitationResponse { id (long), eventId (long), guestId (long), rsvpStatus (RsvpStatus), invitationDate (LocalDate), customMessage (string) }
+Desc: Send an invitation to a guest for an event.
+Sample-Request: {"guestId":555,"customMessage":"Hope you can join us!"}
+Sample-Response: {"id":6001,"eventId":101,"guestId":555,"rsvpStatus":"PENDING","invitationDate":"2026-03-10","customMessage":"Hope you can join us!"}
+
+HTTP PATCH
+URL: http://localhost:8080/api/invitations/{invitationId}/rsvp
+Input-Type: Mixed
+Input: invitationId (long), rsvpStatus (RsvpStatus: PENDING|ACCEPTED|DECLINED)
+Response: InvitationResponse { id (long), eventId (long), guestId (long), rsvpStatus (RsvpStatus), invitationDate (LocalDate), customMessage (string) }
+Desc: Update the RSVP status for an invitation.
+Sample-Request: {"rsvpStatus":"ACCEPTED"}
+Sample-Response: {"id":6001,"eventId":101,"guestId":555,"rsvpStatus":"ACCEPTED","invitationDate":"2026-03-10","customMessage":"Hope you can join us!"}

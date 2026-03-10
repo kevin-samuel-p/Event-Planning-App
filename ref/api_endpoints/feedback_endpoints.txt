@@ -1,0 +1,8 @@
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/feedback
+Input-Type: Mixed
+Input: eventId (long), rating (integer, 1-5), comments (string)
+Response: FeedbackResponse { id (long), userId (long), eventId (long), rating (integer), comments (string) }
+Desc: Submit feedback for an event.
+Sample-Request: {"rating":5,"comments":"Great event!"}
+Sample-Response: {"id":8501,"userId":1,"eventId":101,"rating":5,"comments":"Great event!"}

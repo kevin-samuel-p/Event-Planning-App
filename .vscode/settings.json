@@ -1,3 +1,14 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic"
+    "java.compile.nullAnalysis.mode": "automatic",
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.test.config": [
+        {
+            "name": "backend-with-mockito-agent",
+            "workingDirectory": "${workspaceFolder}/backend",
+            "vmArgs": [
+                "-javaagent:${env:USERPROFILE}\\.m2\\repository\\org\\mockito\\mockito-core\\5.20.0\\mockito-core-5.20.0.jar"
+            ]
+        }
+    ],
+    "java.test.defaultConfig": "backend-with-mockito-agent"
 }

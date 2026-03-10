@@ -1,0 +1,26 @@
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/chat/participants
+Input-Type: Mixed
+Input: eventId (long), userId (long)
+Response: None (204 No Content)
+Desc: Add a participant to the event chat.
+Sample-Request: {"userId":42}
+Sample-Response: NULL
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/chat/messages
+Input-Type: Mixed
+Input: eventId (long), messageText (string)
+Response: MessageResponse { id (long), chatId (long), senderId (long), messageText (string), timestamp (Instant) }
+Desc: Send a chat message for an event.
+Sample-Request: {"messageText":"Team, please confirm your tasks by Friday."}
+Sample-Response: {"id":9101,"chatId":1201,"senderId":1,"messageText":"Team, please confirm your tasks by Friday.","timestamp":"2026-03-10T08:30:00Z"}
+
+HTTP GET
+URL: http://localhost:8080/api/events/{eventId}/chat/messages
+Input-Type: PathParam
+Input: eventId (long)
+Response: List<MessageResponse> { id (long), chatId (long), senderId (long), messageText (string), timestamp (Instant) }
+Desc: List chat messages for an event.
+Sample-Request: NULL
+Sample-Response: [{"id":9101,"chatId":1201,"senderId":1,"messageText":"Team, please confirm your tasks by Friday.","timestamp":"2026-03-10T08:30:00Z"}]
