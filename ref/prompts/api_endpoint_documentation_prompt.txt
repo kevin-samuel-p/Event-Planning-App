@@ -1,0 +1,67 @@
+Task: Discover and document backend API endpoints.
+
+Objective
+Traverse the directory `backend/src` to locate all API endpoints / access points and generate documentation for them.
+
+Scope
+- Only READ files under `backend/src`.
+- DO NOT modify any existing files in `ref/`.
+- Your task is documentation only.
+
+Reference
+Use the documentation in `ref/` for guidance on conventions or existing patterns.
+Files inside `ref/` must never be edited, deleted, or overwritten.
+
+Output Directory
+If it does not exist, create the directory:
+
+ref/api_endpoints/
+
+Endpoint Documentation Format
+Each endpoint must be documented using the following exact format:
+
+HTTP {HTTP Method}
+URL: http://localhost:8080{endpoint_path}
+Input-Type: {RequestBody | RequestParam | PathParam | Mixed | None}
+Input: {Request body structure / parameter list / NULL}
+Response: {Response structure or type}
+Desc: {One-line description of the endpoint behavior}
+
+Example
+
+HTTP GET
+URL: http://localhost:8080/users/{id}
+Input-Type: PathParam
+Input: id (integer)
+Response: UserDTO
+Desc: Fetch a user by ID.
+
+File Organization
+- Group endpoints by their entity, module, or package name.
+- Create one `.txt` file per entity/module.
+- File name format: `{entity_or_module}_endpoints.txt`
+
+Example structure:
+
+ref/
+  api_endpoints/
+    user_endpoints.txt
+    order_endpoints.txt
+    auth_endpoints.txt
+
+Discovery Guidelines
+While scanning `backend/src`, identify endpoints using common backend patterns such as:
+- Controller or route definitions
+- HTTP annotations (e.g., GET, POST, PUT, DELETE)
+- Router registrations
+- API handler functions
+
+Ensure that:
+- Each endpoint appears only once.
+- All detected endpoints are documented.
+
+Pre-Execution Check
+Before starting the task, ask questions if any of the following are unclear:
+- Backend framework (Spring Boot, Express, FastAPI, etc.)
+- Expected response format conventions
+- Parameter naming conventions
