@@ -1,0 +1,8 @@
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/vendors
+Input-Type: Mixed
+Input: eventId (long), vendorId (long), serviceType (string), contractStatus (ContractStatus: PROPOSED|ACTIVE|COMPLETED|CANCELLED)
+Response: EventVendorResponse { id (long), eventId (long), vendorId (long), serviceType (string), contractStatus (ContractStatus) }
+Desc: Add a vendor to an event.
+Sample-Request: {"vendorId":3001,"serviceType":"Catering","contractStatus":"ACTIVE"}
+Sample-Response: {"id":7001,"eventId":101,"vendorId":3001,"serviceType":"Catering","contractStatus":"ACTIVE"}

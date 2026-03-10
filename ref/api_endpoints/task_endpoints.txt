@@ -1,0 +1,17 @@
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/tasks
+Input-Type: Mixed
+Input: eventId (long), taskName (string), description (string), deadline (LocalDate, YYYY-MM-DD), assignedToUserId (long)
+Response: TaskResponse { id (long), taskName (string), description (string), deadline (LocalDate), status (TaskStatus), eventId (long), assignedToUserId (long) }
+Desc: Add a task to an event.
+Sample-Request: {"taskName":"Book venue","description":"Confirm and book the main hall","deadline":"2026-03-25","assignedToUserId":42}
+Sample-Response: {"id":8001,"taskName":"Book venue","description":"Confirm and book the main hall","deadline":"2026-03-25","status":"TODO","eventId":101,"assignedToUserId":42}
+
+HTTP PATCH
+URL: http://localhost:8080/api/tasks/{taskId}/status
+Input-Type: Mixed
+Input: taskId (long), status (TaskStatus: TODO|IN_PROGRESS|COMPLETED)
+Response: TaskResponse { id (long), taskName (string), description (string), deadline (LocalDate), status (TaskStatus), eventId (long), assignedToUserId (long) }
+Desc: Update the status of a task.
+Sample-Request: {"status":"IN_PROGRESS"}
+Sample-Response: {"id":8001,"taskName":"Book venue","description":"Confirm and book the main hall","deadline":"2026-03-25","status":"IN_PROGRESS","eventId":101,"assignedToUserId":42}

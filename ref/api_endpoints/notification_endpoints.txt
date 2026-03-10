@@ -1,0 +1,17 @@
+HTTP GET
+URL: http://localhost:8080/api/notifications/me
+Input-Type: None
+Input: NULL
+Response: List<NotificationResponse> { id (long), userId (long), eventId (long), message (string), status (NotificationStatus) }
+Desc: List notifications for the current user.
+Sample-Request: NULL
+Sample-Response: [{"id":4001,"userId":1,"eventId":101,"message":"Task deadline is tomorrow.","status":"UNREAD"}]
+
+HTTP PATCH
+URL: http://localhost:8080/api/notifications/{notificationId}/read
+Input-Type: PathParam
+Input: notificationId (long)
+Response: NotificationResponse { id (long), userId (long), eventId (long), message (string), status (NotificationStatus) }
+Desc: Mark a notification as read.
+Sample-Request: NULL
+Sample-Response: {"id":4001,"userId":1,"eventId":101,"message":"Task deadline is tomorrow.","status":"READ"}

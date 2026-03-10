@@ -1,0 +1,17 @@
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/budget
+Input-Type: Mixed
+Input: eventId (long), totalBudget (BigDecimal)
+Response: BudgetResponse { id (long), eventId (long), totalBudget (BigDecimal), spentAmount (BigDecimal) }
+Desc: Create a budget for an event.
+Sample-Request: {"totalBudget":15000.00}
+Sample-Response: {"id":501,"eventId":101,"totalBudget":15000.00,"spentAmount":0.00}
+
+HTTP POST
+URL: http://localhost:8080/api/budgets/{budgetId}/payments
+Input-Type: Mixed
+Input: budgetId (long), vendorId (long), amount (BigDecimal), paymentDate (LocalDate, YYYY-MM-DD), paymentStatus (PaymentStatus: PENDING|PAID|FAILED)
+Response: PaymentResponse { id (long), budgetId (long), vendorId (long), amount (BigDecimal), paymentDate (LocalDate), paymentStatus (PaymentStatus) }
+Desc: Add a payment entry to a budget.
+Sample-Request: {"vendorId":3001,"amount":2500.00,"paymentDate":"2026-03-20","paymentStatus":"PAID"}
+Sample-Response: {"id":9001,"budgetId":501,"vendorId":3001,"amount":2500.00,"paymentDate":"2026-03-20","paymentStatus":"PAID"}
