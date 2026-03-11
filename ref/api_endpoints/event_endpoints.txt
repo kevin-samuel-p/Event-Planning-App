@@ -79,32 +79,6 @@ Desc: Add a payment to a budget with budget validation
 Sample-Request: {"eventVendorId":301,"amount":1500.00,"paymentDate":"2026-03-11","paymentStatus":"PAID"}
 Sample-Response: {"id":601,"budgetId":201,"eventVendorId":301,"amount":1500.00,"paymentDate":"2026-03-11","paymentStatus":"PAID"}
 
-HTTP POST
-URL: http://localhost:8080/api/events/{eventId}/chat/participants
-Input-Type: Mixed
-Input: eventId (PathVariable), userId (long)
-Response: void (204 No Content)
-Desc: Add a participant to event chat
-Sample-Request: {"userId":4}
-Sample-Response: NULL
-
-HTTP POST
-URL: http://localhost:8080/api/events/{eventId}/chat/messages
-Input-Type: Mixed
-Input: eventId (PathVariable), messageText (string)
-Response: MessageResponse { id (long), chatId (long), senderId (long), messageText (string), timestamp (Instant) }
-Desc: Send a message in event chat
-Sample-Request: {"messageText":"Looking forward to the event!"}
-Sample-Response: {"id":701,"chatId":801,"senderId":2,"messageText":"Looking forward to the event!","timestamp":"2026-03-11T06:00:00Z"}
-
-HTTP GET
-URL: http://localhost:8080/api/events/{eventId}/chat/messages
-Input-Type: PathParam
-Input: eventId (long)
-Response: List<MessageResponse> { id (long), chatId (long), senderId (long), messageText (string), timestamp (Instant) }
-Desc: Get all messages for an event chat
-Sample-Request: NULL
-Sample-Response: [{"id":701,"chatId":801,"senderId":2,"messageText":"Looking forward to the event!","timestamp":"2026-03-11T06:00:00Z"}]
 
 HTTP GET
 URL: http://localhost:8080/api/notifications/me
