@@ -4,9 +4,6 @@ import com.eventplanning.backend.budget.BudgetResponse;
 import com.eventplanning.backend.budget.CreateBudgetRequest;
 import com.eventplanning.backend.budget.CreatePaymentRequest;
 import com.eventplanning.backend.budget.PaymentResponse;
-import com.eventplanning.backend.chat.AddChatParticipantRequest;
-import com.eventplanning.backend.chat.MessageResponse;
-import com.eventplanning.backend.chat.SendMessageRequest;
 import com.eventplanning.backend.feedback.CreateFeedbackRequest;
 import com.eventplanning.backend.feedback.FeedbackResponse;
 import com.eventplanning.backend.invitation.CreateInvitationRequest;
@@ -89,23 +86,6 @@ public class EventWorkflowController {
     @ResponseStatus(HttpStatus.CREATED)
     public PaymentResponse addPayment(@PathVariable Long budgetId, @Valid @RequestBody CreatePaymentRequest request) {
         return service.addPayment(budgetId, request);
-    }
-
-    @PostMapping("/events/{eventId}/chat/participants")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void addChatParticipant(@PathVariable Long eventId, @Valid @RequestBody AddChatParticipantRequest request) {
-        service.addChatParticipant(eventId, request);
-    }
-
-    @PostMapping("/events/{eventId}/chat/messages")
-    @ResponseStatus(HttpStatus.CREATED)
-    public MessageResponse sendMessage(@PathVariable Long eventId, @Valid @RequestBody SendMessageRequest request) {
-        return service.sendMessage(eventId, request);
-    }
-
-    @GetMapping("/events/{eventId}/chat/messages")
-    public List<MessageResponse> listMessages(@PathVariable Long eventId) {
-        return service.listMessages(eventId);
     }
 
     @GetMapping("/notifications/me")

@@ -1,0 +1,17 @@
+I have made the change in the ERD code. Payment Entity now has an event_vendor_id foreign key attribute instead of event_vendor, and the relationship is between event_vendor entity and payment as opposed to user and payment.
+
+We got a joint team feedback to implement a relationship between the task entity and payment entity because our stakeholder was not clear with the overall design, but after a rigorous team discussion, we have decided not to do this as vendors should be paid for their services and not for individual tasks pertaining to those services. This works because ONLY VENDORS WILL BE PAID THROUGH THIS PLATFORM (not team members, not organizers). 
+
+One more thing before the task description, I think linking both budget_id and event_vendor_id to Payment entity as foreign keys leads to a violation of 2CF due to a partial dependency on event_id (both budget_id and event_vendor_id are dependent on event_id as a foreign key). Is this true? And if it is, how can we resolve this?
+
+----
+
+Great! Your task, now, is to scan the codebase in backend/ and do the following:
+- Check that only vendors are paid as per the system activity design. If there are other users that can avail payment options, you need to remove them, because (organizer + team members) register as a single company, and internal company payroll is beyond the scope of this app. The payment in this app is only between a company (organizer/team members) and an event_vendor.
+- Check that payments reflect in the budget (via budget_id fk). If there is not enough budget to make a payment, the payment should not be made/canceled. Every payment that is made successfully needs to update the budget of the company for the event. 
+If either of these two checks prove false, make the changes required to implement them in the codebase.
+- Change the attributes of the payment entity as per the new ERD (change fk vendor_id to fk event_vendor_id, if relationship is shown in entity then change it so that it points to new attribute), and then ensure that this change is reflected throughout the database. If there are any inconsistencies or references to vendor_id through payment entity, then fix them.
+
+---
+
+Now, I want you to once again scan the codebase for API endpoints, and verify every endpoint against its respective documentation in ref/api_endpoints. The documentation changed slightly from last time, but no endpoints have been missed out. Please ensure that the controller's endpoints still have the same functionality and do the same action. If not, update the documentation.

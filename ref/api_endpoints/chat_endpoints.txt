@@ -1,26 +1,117 @@
-HTTP POST
-URL: http://localhost:8080/api/events/{eventId}/chat/participants
-Input-Type: Mixed
-Input: eventId (long), userId (long)
-Response: None (204 No Content)
-Desc: Add a participant to the event chat.
-Sample-Request: {"userId":42}
-Sample-Response: NULL
+# Group Chat Management
 
 HTTP POST
-URL: http://localhost:8080/api/events/{eventId}/chat/messages
-Input-Type: Mixed
-Input: eventId (long), messageText (string)
-Response: MessageResponse { id (long), chatId (long), senderId (long), messageText (string), timestamp (Instant) }
-Desc: Send a chat message for an event.
-Sample-Request: {"messageText":"Team, please confirm your tasks by Friday."}
-Sample-Response: {"id":9101,"chatId":1201,"senderId":1,"messageText":"Team, please confirm your tasks by Friday.","timestamp":"2026-03-10T08:30:00Z"}
+URL: http://localhost:8080/api/group-chats
+Input-Type: JSON
+Input: CreateGroupChatRequest { gcName (string, max 100 chars), eventId (long) }
+Response: GroupChatResponse { id (long), gcName (string), joinCode (string, 6 chars), createdByUserId (long), eventId (long), createdAt (LocalDate) }
+Desc: Create a new group chat for an event. Only event organizers can create group chats.
+Sample-Request: {"gcName":"Wedding Planning Chat","eventId":123}
+Sample-Response: {"id":1001,"gcName":"Wedding Planning Chat","joinCode":"A3B7C9","createdByUserId":1,"eventId":123,"createdAt":"2026-03-11"}
+
+HTTP POST
+URL: http://localhost:8080/api/group-chats/join
+Input-Type: JSON
+Input: JoinGroupChatRequest { joinCode (string, max 10 chars) }
+Response: GroupChatResponse { id (long), gcName (string), joinCode (string), createdByUserId (long), eventId (long), createdAt (LocalDate) }
+Desc: Join an existing group chat using the join code.
+Sample-Request: {"joinCode":"A3B7C9"}
+Sample-Response: {"id":1001,"gcName":"Wedding Planning Chat","joinCode":"A3B7C9","createdByUserId":1,"eventId":123,"createdAt":"2026-03-11"}
 
 HTTP GET
-URL: http://localhost:8080/api/events/{eventId}/chat/messages
+URL: http://localhost:8080/api/group-chats/{groupChatId}/members
 Input-Type: PathParam
-Input: eventId (long)
-Response: List<MessageResponse> { id (long), chatId (long), senderId (long), messageText (string), timestamp (Instant) }
-Desc: List chat messages for an event.
+Input: groupChatId (long)
+Response: List<ChatMemberResponse> { id (long), userId (long), userName (string), groupChatId (long), joinedAt (LocalDate), attributes (List<AttributeResponse>) }
+Desc: Get all members of a group chat. Must be a member to view.
 Sample-Request: NULL
-Sample-Response: [{"id":9101,"chatId":1201,"senderId":1,"messageText":"Team, please confirm your tasks by Friday.","timestamp":"2026-03-10T08:30:00Z"}]
+Sample-Response: [{"id":2001,"userId":1,"userName":"John Doe","groupChatId":1001,"joinedAt":"2026-03-11","attributes":[]}]
+
+# Attribute Management
+
+HTTP POST
+URL: http://localhost:8080/api/attributes
+Input-Type: JSON
+Input: CreateAttributeRequest { attributeName (string, max 100 chars), permissionsConfig (string), groupChatId (long) }
+Response: AttributeResponse { id (long), attributeName (string), permissionsConfig (string), groupChatId (long) }
+Desc: Create a configurable attribute for ABAC permissions in a group chat.
+Sample-Request: {"attributeName":"can_create_forums","permissionsConfig":"{\"create\":true,\"read\":true,\"update\":false,\"delete\":false}","groupChatId":1001}
+Sample-Response: {"id":3001,"attributeName":"can_create_forums","permissionsConfig":"{\"create\":true,\"read\":true,\"update\":false,\"delete\":false}","groupChatId":1001}
+
+HTTP POST
+URL: http://localhost:8080/api/attributes/assign
+Input-Type: JSON
+Input: AssignAttributeRequest { memberId (long), attributeId (long) }
+Response: None (204 No Content)
+Desc: Assign an attribute to a chat member for permission management.
+Sample-Request: {"memberId":2001,"attributeId":3001}
+Sample-Response: NULL
+
+# Forum Management
+
+HTTP POST
+URL: http://localhost:8080/api/forums
+Input-Type: JSON
+Input: CreateForumRequest { forumName (string, max 100 chars), groupChatId (long) }
+Response: ForumResponse { id (long), forumName (string), createdByUserId (long), groupChatId (long), createdAt (LocalDate) }
+Desc: Create a forum within a group chat for topic-specific discussions.
+Sample-Request: {"forumName":"Venue Discussion","groupChatId":1001}
+Sample-Response: {"id":4001,"forumName":"Venue Discussion","createdByUserId":1,"groupChatId":1001,"createdAt":"2026-03-11"}
+
+HTTP GET
+URL: http://localhost:8080/api/forums/group-chat/{groupChatId}
+Input-Type: PathParam
+Input: groupChatId (long)
+Response: List<ForumResponse> { id (long), forumName (string), createdByUserId (long), groupChatId (long), createdAt (LocalDate) }
+Desc: Get all forums in a group chat. Must be a member to view.
+Sample-Request: NULL
+Sample-Response: [{"id":4001,"forumName":"Venue Discussion","createdByUserId":1,"groupChatId":1001,"createdAt":"2026-03-11"}]
+
+# Group Chat Messages
+
+HTTP POST
+URL: http://localhost:8080/api/messages/gc
+Input-Type: JSON
+Input: SendGcMessageRequest { forumId (long), message (string) }
+Response: GcMessageResponse { id (long), forumId (long), memberId (long), memberName (string), message (string), timestamp (Instant) }
+Desc: Send a message to a forum within a group chat.
+Sample-Request: {"forumId":4001,"message":"I think we should consider the garden venue"}
+Sample-Response: {"id":5001,"forumId":4001,"memberId":2001,"memberName":"John Doe","message":"I think we should consider the garden venue","timestamp":"2026-03-11T14:30:00Z"}
+
+HTTP GET
+URL: http://localhost:8080/api/messages/gc/forum/{forumId}
+Input-Type: PathParam
+Input: forumId (long)
+Response: List<GcMessageResponse> { id (long), forumId (long), memberId (long), memberName (string), message (string), timestamp (Instant) }
+Desc: Get all messages in a forum, ordered by timestamp.
+Sample-Request: NULL
+Sample-Response: [{"id":5001,"forumId":4001,"memberId":2001,"memberName":"John Doe","message":"I think we should consider the garden venue","timestamp":"2026-03-11T14:30:00Z"}]
+
+# Direct Messages
+
+HTTP POST
+URL: http://localhost:8080/api/messages/direct
+Input-Type: JSON
+Input: CreateDirectMessageRequest { member2Id (long) }
+Response: DirectMessageResponse { id (long), member1Id (long), member2Id (long), member1Name (string), member2Name (string), createdAt (LocalDate) }
+Desc: Create a direct message conversation with another group chat member.
+Sample-Request: {"member2Id":2002}
+Sample-Response: {"id":6001,"member1Id":2001,"member2Id":2002,"member1Name":"John Doe","member2Name":"Jane Smith","createdAt":"2026-03-11"}
+
+HTTP POST
+URL: http://localhost:8080/api/messages/dm
+Input-Type: JSON
+Input: SendDmMessageRequest { dmId (long), message (string) }
+Response: DmMessageResponse { id (long), dmId (long), userId (long), userName (string), message (string), timestamp (Instant) }
+Desc: Send a message in a direct message conversation.
+Sample-Request: {"dmId":6001,"message":"Can you help with the vendor coordination?"}
+Sample-Response: {"id":7001,"dmId":6001,"userId":2001,"userName":"John Doe","message":"Can you help with the vendor coordination?","timestamp":"2026-03-11T15:45:00Z"}
+
+HTTP GET
+URL: http://localhost:8080/api/messages/dm/{dmId}
+Input-Type: PathParam
+Input: dmId (long)
+Response: List<DmMessageResponse> { id (long), dmId (long), userId (long), userName (string), message (string), timestamp (Instant) }
+Desc: Get all messages in a direct message conversation. Only participants can view.
+Sample-Request: NULL
+Sample-Response: [{"id":7001,"dmId":6001,"userId":2001,"userName":"John Doe","message":"Can you help with the vendor coordination?","timestamp":"2026-03-11T15:45:00Z"}]

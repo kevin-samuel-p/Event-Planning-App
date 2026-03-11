@@ -1,10 +1,7 @@
-package com.eventplanning.backend.budget;
+package com.eventplanning.backend.groupchat;
 
-import com.eventplanning.backend.vendor.EventVendor;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -12,8 +9,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,33 +17,29 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "payments")
+@Table(name = "gc_messages")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Payment {
+public class GcMessage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "budget_id")
-    private Budget budget;
+    @JoinColumn(name = "forum_id")
+    private Forum forum;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "event_vendor_id")
-    private EventVendor eventVendor;
+    @JoinColumn(name = "member_id")
+    private ChatMember member;
 
-    @Column(nullable = false, precision = 15, scale = 2)
-    private BigDecimal amount;
+    @Column(nullable = false, columnDefinition = "TEXT")
+    private String message;
 
     @Column(nullable = false)
-    private LocalDate paymentDate;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PaymentStatus paymentStatus;
+    private Instant timestamp;
 }
