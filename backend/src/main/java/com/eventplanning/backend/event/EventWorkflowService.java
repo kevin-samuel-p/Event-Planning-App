@@ -248,26 +248,40 @@ public class EventWorkflowService {
             throw new AccessDeniedException("Only event organizer can add payments");
         }
 
-        User vendor = userRepository.findById(request.vendorId())
-                .orElseThrow(() -> new NotFoundException("Vendor not found"));
-        if (vendor.getRole() != Role.VENDOR) {
-            throw new BadRequestException("Selected user is not a vendor");
+        EventVendor eventVendor = eventVendorRepository.findById(request.eventVendorId())
+                .orElseThrow(() -> new NotFoundException("Event vendor not found"));
+        
+        // Verify the event vendor belongs to the same event as the budget
+        if (!eventVendor.getEvent().getId().equals(budget.getEvent().getId())) {
+            throw new BadRequestException("Event vendor does not belong to this event's budget");
+        }
+
+        // Budget validation - check if enough budget is available
+        BigDecimal currentSpent = budget.getSpentAmount();
+        BigDecimal totalBudget = budget.getTotalBudget();
+        BigDecimal newSpent = currentSpent.add(request.amount());
+        
+        if (newSpent.compareTo(totalBudget) > 0) {
+            throw new BadRequestException("Insufficient budget. Available: " + 
+                totalBudget.subtract(currentSpent) + ", Requested: " + request.amount());
         }
 
         Payment payment = paymentRepository.save(Payment.builder()
                 .budget(budget)
-                .vendor(vendor)
+                .eventVendor(eventVendor)
                 .amount(request.amount())
                 .paymentDate(request.paymentDate())
                 .paymentStatus(request.paymentStatus())
                 .build());
 
+        // Update budget spent amount only for paid payments
         if (request.paymentStatus() == PaymentStatus.PAID) {
-            budget.setSpentAmount(budget.getSpentAmount().add(request.amount()));
+            budget.setSpentAmount(newSpent);
             budgetRepository.save(budget);
         }
 
-        notifyUser(vendor, budget.getEvent(), "Payment update: " + request.paymentStatus() + " amount " + request.amount());
+        notifyUser(eventVendor.getVendor(), budget.getEvent(), 
+            "Payment update: " + request.paymentStatus() + " amount " + request.amount());
         return PaymentResponse.from(payment);
     }
 

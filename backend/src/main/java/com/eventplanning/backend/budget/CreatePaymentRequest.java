@@ -6,7 +6,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public record CreatePaymentRequest(
-        @NotNull Long vendorId,
+        @NotNull Long eventVendorId,
         @NotNull @DecimalMin("0.0") BigDecimal amount,
         @NotNull LocalDate paymentDate,
         @NotNull PaymentStatus paymentStatus

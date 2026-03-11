@@ -1,6 +1,6 @@
 package com.eventplanning.backend.budget;
 
-import com.eventplanning.backend.user.User;
+import com.eventplanning.backend.vendor.EventVendor;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -38,8 +38,8 @@ public class Payment {
     private Budget budget;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "vendor_id")
-    private User vendor;
+    @JoinColumn(name = "event_vendor_id")
+    private EventVendor eventVendor;
 
     @Column(nullable = false, precision = 15, scale = 2)
     private BigDecimal amount;

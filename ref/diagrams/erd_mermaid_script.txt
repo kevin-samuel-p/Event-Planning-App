@@ -46,7 +46,7 @@ BUDGET {
 PAYMENT {
     int payment_id PK
     int budget_id FK
-    int vendor_id FK
+    int event_vendor_id FK
     float amount
     date payment_date
     string payment_status
@@ -103,7 +103,7 @@ USER ||--o{ TASK : assigned_to
 
 EVENT ||--|| BUDGET : has
 BUDGET ||--o{ PAYMENT : records
-USER ||--o{ PAYMENT : receives
+EVENT_VENDOR ||--o{ PAYMENT : receives
 
 EVENT ||--o{ EVENT_VENDOR : includes
 USER ||--o{ EVENT_VENDOR : vendor

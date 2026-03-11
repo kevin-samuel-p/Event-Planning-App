@@ -6,7 +6,7 @@ import java.time.LocalDate;
 public record PaymentResponse(
         Long id,
         Long budgetId,
-        Long vendorId,
+        Long eventVendorId,
         BigDecimal amount,
         LocalDate paymentDate,
         PaymentStatus paymentStatus
@@ -15,7 +15,7 @@ public record PaymentResponse(
         return new PaymentResponse(
                 payment.getId(),
                 payment.getBudget().getId(),
-                payment.getVendor().getId(),
+                payment.getEventVendor().getId(),
                 payment.getAmount(),
                 payment.getPaymentDate(),
                 payment.getPaymentStatus()
