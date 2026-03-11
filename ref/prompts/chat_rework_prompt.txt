@@ -1,0 +1,9 @@
+We have an ERD change proposal after a team discussion on how the chat system works.
+
+Per event, an organization will be able to create one and only one Group_Chat, with attributes like (gc_id PK, gc_name, join_code (unique), created_by_user FK, event_id FK, created_at (date)) having a number of Chat_Members like (member_id pk, gc_id fk, user_id fk, joined_at (date)) joining through the join_code. This group chat will function similar to the structure of a Discord server: it will have many "Forums" (each forum consisting of attributes like (forum_id pk, gc_id fk, forum_name, created_by_user fk, created_at (date)) for specific topics. In order to implement ABAC across forums in the Group_Chat, the Group_Chat will have mappings to an Attributes global table (attribute_id pk, attribute_name, [list of permissions/configurations], gc_id fk). A  Chat_Member can have many attributes, so create a separate entity for the normalization and storage of a Chat_Member's many Attributes. Outside the Group_Chat, Chat_Members can Direct_Message (dm_id pk, gc_id fk, member_id fk, member_id fk (two members)) other Chat_Members in the same Group_Chat. For storage of messages, two entities exist: GC_Message (message_id pk, forum_id fk, gc_id fk, member_id fk (sender of the message), message, timestamp) and DM_Message (message_id pk, dm_id fk, user_id fk, message, timestamp). 
+
+This is a rough conceptual draft, please design this accurately and replace the current system with this.
+Your changes should reflect in the requisite reference documents (like erd and other diagrams) in ref/ as well as the codebase in backend/
+The ERD (and other diagrams) use Mermaid Live syntax, while the backend is written in Spring Boot using H2.
+
+If you have any queries, please get them clarified before proceeding.

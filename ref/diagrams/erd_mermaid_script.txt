@@ -61,26 +61,6 @@ INVITATION {
     string custom_message
 }
 
-CHAT {
-    int chat_id PK
-    int event_id FK
-    string chat_type
-}
-
-CHAT_PARTICIPANT {
-    int participant_id PK
-    int chat_id FK
-    int user_id FK
-}
-
-MESSAGE {
-    int message_id PK
-    int chat_id FK
-    int sender_id FK
-    string message_text
-    datetime timestamp
-}
-
 NOTIFICATION {
     int notification_id PK
     int user_id FK
@@ -97,6 +77,67 @@ FEEDBACK {
     string comments
 }
 
+GROUP_CHAT {
+    int gc_id PK
+    string gc_name
+    string join_code
+    int created_by_user FK
+    int event_id FK
+    date created_at
+}
+
+ATTRIBUTE {
+    int attribute_id PK
+    string attribute_name
+    string permissions_config
+    int gc_id FK
+}
+
+CHAT_MEMBER {
+    int member_id PK
+    int gc_id FK
+    int user_id FK
+    date joined_at
+}
+
+CHAT_MEMBER_ATTRIBUTE {
+    int member_attribute_id PK
+    int member_id FK
+    int attribute_id FK
+}
+
+FORUM {
+    int forum_id PK
+    string forum_name
+    int created_by_user FK
+    int gc_id FK
+    date created_at
+}
+
+GC_MESSAGE {
+    int message_id PK
+    int forum_id FK
+    int member_id FK
+    string message
+    datetime timestamp
+}
+
+DIRECT_MESSAGE {
+    int dm_id PK
+    int gc_id FK
+    int member1_id FK
+    int member2_id FK
+    date created_at
+}
+
+DM_MESSAGE {
+    int message_id PK
+    int dm_id FK
+    int user_id FK
+    string message
+    datetime timestamp
+}
+
 USER ||--o{ EVENT : creates
 EVENT ||--o{ TASK : has
 USER ||--o{ TASK : assigned_to
@@ -111,12 +152,27 @@ USER ||--o{ EVENT_VENDOR : vendor
 EVENT ||--o{ INVITATION : sends
 USER ||--o{ INVITATION : receives
 
-EVENT ||--|| CHAT : group_chat
-CHAT ||--o{ CHAT_PARTICIPANT : has
-USER ||--o{ CHAT_PARTICIPANT : joins
+EVENT ||--|| GROUP_CHAT : has
+USER ||--o{ GROUP_CHAT : creates
 
-CHAT ||--o{ MESSAGE : contains
-USER ||--o{ MESSAGE : sends
+GROUP_CHAT ||--o{ CHAT_MEMBER : contains
+USER ||--o{ CHAT_MEMBER : joins
+
+GROUP_CHAT ||--o{ ATTRIBUTE : defines
+ATTRIBUTE ||--o{ CHAT_MEMBER_ATTRIBUTE : assigned_to
+CHAT_MEMBER ||--o{ CHAT_MEMBER_ATTRIBUTE : has
+
+GROUP_CHAT ||--o{ FORUM : contains
+USER ||--o{ FORUM : creates
+
+FORUM ||--o{ GC_MESSAGE : contains
+CHAT_MEMBER ||--o{ GC_MESSAGE : sends
+
+GROUP_CHAT ||--o{ DIRECT_MESSAGE : facilitates
+CHAT_MEMBER ||--o{ DIRECT_MESSAGE : participates
+
+DIRECT_MESSAGE ||--o{ DM_MESSAGE : contains
+USER ||--o{ DM_MESSAGE : sends
 
 EVENT ||--o{ NOTIFICATION : generates
 USER ||--o{ NOTIFICATION : receives

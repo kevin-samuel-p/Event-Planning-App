@@ -1,6 +1,6 @@
-package com.eventplanning.backend.chat;
+package com.eventplanning.backend.groupchat;
 
-import com.eventplanning.backend.user.User;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -16,23 +16,23 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "chat_participants")
+@Table(name = "chat_member_attributes")
 @Getter
 @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatParticipant {
+public class ChatMemberAttribute {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "chat_id")
-    private Chat chat;
+    @JoinColumn(name = "member_id")
+    private ChatMember chatMember;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "attribute_id")
+    private Attribute attribute;
 }
