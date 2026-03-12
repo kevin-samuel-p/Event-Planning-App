@@ -62,14 +62,23 @@ public class SecurityConfig {
 
     @Bean
     public JwtDecoder jwtDecoder() {
-        SecretKeySpec key = new SecretKeySpec(jwtProperties.secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        // Use the actual secret from application.yml
+        String secret = jwtProperties.secret();
+        SecretKeySpec key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
         return NimbusJwtDecoder.withSecretKey(key).build();
     }
 
     @Bean
     public JwtEncoder jwtEncoder() {
-        SecretKeySpec key = new SecretKeySpec(jwtProperties.secret().getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        return new NimbusJwtEncoder(new ImmutableSecret<SecurityContext>(key));
+        String secret = jwtProperties.secret();
+        System.out.println("JWT Secret being used: " + secret);
+        System.out.println("JWT Secret length: " + secret.length());
+        
+        // Use the actual secret from application.yml
+        SecretKeySpec key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+        
+        // Create JWT encoder using the working approach - no generics
+        return new NimbusJwtEncoder(new com.nimbusds.jose.jwk.source.ImmutableSecret(key));
     }
 
     @Bean

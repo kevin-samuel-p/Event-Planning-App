@@ -335,15 +335,32 @@ class DataPopulator:
         print(f"   Guest: eve@example.com")
 
 if __name__ == "__main__":
-    # Check if server is running
-    try:
-        response = requests.get(f"{BASE_URL}/actuator/health", timeout=5)
-        if response.status_code != 200:
-            print("❌ Server is not responding correctly. Please ensure the Spring Boot app is running.")
-            exit(1)
-    except requests.exceptions.RequestException:
-        print("❌ Cannot connect to server. Please ensure the Spring Boot app is running on localhost:8080")
+    # Check if server is running - try multiple endpoints
+    server_running = False
+    health_endpoints = [
+        f"{BASE_URL}/actuator/health",
+        f"{BASE_URL}/auth/register",  # Fallback to auth endpoint
+        "http://localhost:8080/actuator/health",  # Try without /api
+    ]
+    
+    for endpoint in health_endpoints:
+        try:
+            print(f"🔍 Checking server at: {endpoint}")
+            response = requests.get(endpoint, timeout=5)
+            if response.status_code in [200, 201, 404, 405]:  # Accept various success codes
+                server_running = True
+                print(f"✅ Server is responding at {endpoint}")
+                break
+        except requests.exceptions.RequestException as e:
+            print(f"⚠️  Cannot reach {endpoint}: {str(e)}")
+            continue
+    
+    if not server_running:
+        print("❌ Server is not responding. Please ensure the Spring Boot app is running on localhost:8080")
+        print("💡 Try running: mvn spring-boot:run")
         exit(1)
+    
+    print("🚀 Starting sample data population...\n")
     
     # Populate data
     populator = DataPopulator()

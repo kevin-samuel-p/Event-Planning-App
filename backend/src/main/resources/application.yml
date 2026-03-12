@@ -1,21 +1,19 @@
 spring:
   datasource:
-    url: ${DB_URL:jdbc:h2:mem:eventdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE}
-    username: ${DB_USERNAME:sa}
+    url: ${DB_URL:jdbc:mysql://localhost:3306/event_planning_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: false
-  h2:
-    console:
-      enabled: true
-      path: /h2-console
+    database-platform: org.hibernate.dialect.MySQLDialect
 
 server:
   port: ${SERVER_PORT:8080}
 
 app:
   jwt:
-    secret: ${JWT_SECRET:change-me-to-a-very-long-secret-key-for-hs256-signing}
+    secret: mySuperSecretKeyForJWTTokenGenerationThatIsLongEnoughForHS256Algorithm
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:180}

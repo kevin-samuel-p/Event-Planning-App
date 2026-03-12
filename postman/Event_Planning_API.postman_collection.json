@@ -2215,12 +2215,20 @@
 					],
 					"request": {
 						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}",
+								"disabled": true
+							}
+						],
 						"url": {
-							"raw": "{{base_url}}/actuator/health",
+							"raw": "{{base_url}}/../actuator/health",
 							"host": [
 								"{{base_url}}"
 							],
 							"path": [
+								"..",
 								"actuator",
 								"health"
 							]
