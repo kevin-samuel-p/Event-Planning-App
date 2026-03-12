@@ -1,0 +1,2253 @@
+{
+	"info": {
+		"_postman_id": "event-planning-api-collection",
+		"name": "Event Planning API - Complete Test Suite",
+		"description": "Comprehensive API testing collection for Event Planning backend with JWT authentication, event management, and advanced chat system",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "🔐 Authentication",
+			"item": [
+				{
+					"name": "Register Organizer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Response has user data\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('email');",
+									"    pm.expect(jsonData).to.have.property('role');",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"});",
+									"",
+									"// Store token for future requests",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('organizer_token', responseJson.token);",
+									"    pm.collectionVariables.set('organizer_id', responseJson.id);",
+									"    pm.collectionVariables.set('organizer_email', responseJson.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Organizer\",\n    \"email\": \"organizer@test.com\",\n    \"phone\": \"+1234567890\",\n    \"password\": \"password123\",\n    \"role\": \"ORGANIZER\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "Register Vendor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store vendor data",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('vendor_token', responseJson.token);",
+									"    pm.collectionVariables.set('vendor_id', responseJson.id);",
+									"    pm.collectionVariables.set('vendor_email', responseJson.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Catering Service\",\n    \"email\": \"vendor@test.com\",\n    \"phone\": \"+1234567891\",\n    \"password\": \"password123\",\n    \"role\": \"VENDOR\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "Register Team Member",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store team member data",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('team_member_token', responseJson.token);",
+									"    pm.collectionVariables.set('team_member_id', responseJson.id);",
+									"    pm.collectionVariables.set('team_member_email', responseJson.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Team Member\",\n    \"email\": \"team@test.com\",\n    \"phone\": \"+1234567892\",\n    \"password\": \"password123\",\n    \"role\": \"TEAM_MEMBER\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "Register Guest",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store guest data",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('guest_token', responseJson.token);",
+									"    pm.collectionVariables.set('guest_id', responseJson.id);",
+									"    pm.collectionVariables.set('guest_email', responseJson.email);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Test Guest\",\n    \"email\": \"guest@test.com\",\n    \"phone\": \"+1234567893\",\n    \"password\": \"password123\",\n    \"role\": \"GUEST\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"register"
+							]
+						}
+					}
+				},
+				{
+					"name": "Login - Organizer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response has token\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('token');",
+									"});",
+									"",
+									"// Update organizer token",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('organizer_token', responseJson.token);",
+									"    pm.collectionVariables.set('organizer_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"organizer@test.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "Login - Vendor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Update vendor token",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('vendor_token', responseJson.token);",
+									"    pm.collectionVariables.set('vendor_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"vendor@test.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "Login - Team Member",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Update team member token",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('team_member_token', responseJson.token);",
+									"    pm.collectionVariables.set('team_member_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"team@test.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				},
+				{
+					"name": "Login - Guest",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"// Update guest token",
+									"if (pm.response.code === 200) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('guest_token', responseJson.token);",
+									"    pm.collectionVariables.set('guest_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"guest@test.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "🎉 Event Management",
+			"item": [
+				{
+					"name": "Create Event - Wedding",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Event created successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('eventName');",
+									"    pm.expect(jsonData).to.have.property('organizerId');",
+									"});",
+									"",
+									"// Store event ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('wedding_event_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"eventName\": \"Summer Wedding Celebration\",\n    \"eventDate\": \"2026-06-15\",\n    \"venue\": \"Grand Garden Hotel\",\n    \"eventType\": \"Wedding\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/events",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Event - Corporate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store corporate event ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('corporate_event_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"eventName\": \"Corporate Annual Gala\",\n    \"eventDate\": \"2026-08-20\",\n    \"venue\": \"Downtown Convention Center\",\n    \"eventType\": \"Conference\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/events",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events"
+							]
+						}
+					}
+				},
+				{
+					"name": "List My Events",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Response is an array\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/events/my",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"my"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Budget - Wedding",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store budget ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('wedding_budget_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"totalBudget\": 15000.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/events/{{wedding_event_id}}/budget",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"{{wedding_event_id}}",
+								"budget"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Budget - Corporate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store corporate budget ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('corporate_budget_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"totalBudget\": 25000.00\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/events/{{corporate_event_id}}/budget",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"{{corporate_event_id}}",
+								"budget"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Vendor - Catering",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store event vendor ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('catering_vendor_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"vendorId\": {{vendor_id}},\n    \"serviceType\": \"Catering\",\n    \"contractStatus\": \"PENDING\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/events/{{wedding_event_id}}/vendors",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"{{wedding_event_id}}",
+								"vendors"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Vendor - Photography",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store photography vendor ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('photography_vendor_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"vendorId\": {{vendor_id}},\n    \"serviceType\": \"Photography\",\n    \"contractStatus\": \"PENDING\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/events/{{corporate_event_id}}/vendors",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"{{corporate_event_id}}",
+								"vendors"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Task - Setup Venue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store task ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('setup_task_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"taskName\": \"Setup Wedding Venue\",\n    \"description\": \"Arrange tables, chairs, and decorations\",\n    \"deadline\": \"2026-06-14\",\n    \"assignedToUserId\": {{team_member_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/events/{{wedding_event_id}}/tasks",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"{{wedding_event_id}}",
+								"tasks"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update Task Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{team_member_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"status\": \"IN_PROGRESS\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/tasks/{{setup_task_id}}/status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"tasks",
+								"{{setup_task_id}}",
+								"status"
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Invitation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store invitation ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('invitation_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"guestId\": {{guest_id}},\n    \"customMessage\": \"We'd love to have you at our wedding celebration!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/events/{{wedding_event_id}}/invitations",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"{{wedding_event_id}}",
+								"invitations"
+							]
+						}
+					}
+				},
+				{
+					"name": "Update RSVP",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{guest_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rsvpStatus\": \"ACCEPTED\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/invitations/{{invitation_id}}/rsvp",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"invitations",
+								"{{invitation_id}}",
+								"rsvp"
+							]
+						}
+					}
+				},
+				{
+					"name": "Add Payment",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"eventVendorId\": {{catering_vendor_id}},\n    \"amount\": 3500.00,\n    \"paymentDate\": \"2026-03-12\",\n    \"paymentStatus\": \"PAID\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/budgets/{{wedding_budget_id}}/payments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"budgets",
+								"{{wedding_budget_id}}",
+								"payments"
+							]
+						}
+					}
+				},
+				{
+					"name": "Submit Feedback",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{guest_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 5,\n    \"comments\": \"Amazing event planning! Everything was perfect.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/events/{{wedding_event_id}}/feedback",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"{{wedding_event_id}}",
+								"feedback"
+							]
+						}
+					}
+				},
+				{
+					"name": "Complete Event",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/events/{{wedding_event_id}}/complete",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"{{wedding_event_id}}",
+								"complete"
+							]
+						}
+					}
+				},
+				{
+					"name": "Generate Event Report",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Report has required fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('eventId');",
+									"    pm.expect(jsonData).to.have.property('totalTasks');",
+									"    pm.expect(jsonData).to.have.property('completedTasks');",
+									"    pm.expect(jsonData).to.have.property('averageRating');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/events/{{wedding_event_id}}/report",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"events",
+								"{{wedding_event_id}}",
+								"report"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "💬 Advanced Chat System",
+			"item": [
+				{
+					"name": "Create Group Chat - Wedding",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Group chat created successfully\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('joinCode');",
+									"    pm.expect(jsonData).to.have.property('gcName');",
+									"});",
+									"",
+									"// Store group chat data",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('wedding_group_chat_id', responseJson.id);",
+									"    pm.collectionVariables.set('wedding_join_code', responseJson.joinCode);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"gcName\": \"Wedding Planning Chat\",\n    \"eventId\": {{wedding_event_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/group-chats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"group-chats"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Group Chat - Corporate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store corporate group chat data",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('corporate_group_chat_id', responseJson.id);",
+									"    pm.collectionVariables.set('corporate_join_code', responseJson.joinCode);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"gcName\": \"Corporate Gala Planning\",\n    \"eventId\": {{corporate_event_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/group-chats",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"group-chats"
+							]
+						}
+					}
+				},
+				{
+					"name": "Join Group Chat - Team Member",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{team_member_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"joinCode\": \"{{wedding_join_code}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/group-chats/join",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"group-chats",
+								"join"
+							]
+						}
+					}
+				},
+				{
+					"name": "Join Group Chat - Vendor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendor_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"joinCode\": \"{{wedding_join_code}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/group-chats/join",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"group-chats",
+								"join"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Group Chat Members",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Members list is an array\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/group-chats/{{wedding_group_chat_id}}/members",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"group-chats",
+								"{{wedding_group_chat_id}}",
+								"members"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Attribute - Can Create Forums",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store attribute ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('forum_create_attribute_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"attributeName\": \"can_create_forums\",\n    \"permissionsConfig\": \"{\\\"create\\\":true,\\\"read\\\":true,\\\"update\\\":false,\\\"delete\\\":false}\",\n    \"groupChatId\": {{wedding_group_chat_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/attributes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"attributes"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Attribute - Can Moderate",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store moderate attribute ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('moderate_attribute_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"attributeName\": \"can_moderate\",\n    \"permissionsConfig\": \"{\\\"create\\\":false,\\\"read\\\":true,\\\"update\\\":true,\\\"delete\\\":true}\",\n    \"groupChatId\": {{wedding_group_chat_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/attributes",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"attributes"
+							]
+						}
+					}
+				},
+				{
+					"name": "Assign Attribute to Team Member",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 204\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"memberId\": {{team_member_id}},\n    \"attributeId\": {{forum_create_attribute_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/attributes/assign",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"attributes",
+								"assign"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Forum - General Discussion",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store forum ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('general_forum_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"forumName\": \"General Discussion\",\n    \"groupChatId\": {{wedding_group_chat_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/forums",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"forums"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Forum - Venue Planning",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store venue forum ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('venue_forum_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"forumName\": \"Venue Planning\",\n    \"groupChatId\": {{wedding_group_chat_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/forums",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"forums"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Forum - Vendor Coordination",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store vendor forum ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('vendor_forum_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"forumName\": \"Vendor Coordination\",\n    \"groupChatId\": {{wedding_group_chat_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/forums",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"forums"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Forums for Group Chat",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Forums list is an array\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.at.least(3);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/forums/group-chat/{{wedding_group_chat_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"forums",
+								"group-chat",
+								"{{wedding_group_chat_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Forum Message - General",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Message has required fields\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('id');",
+									"    pm.expect(jsonData).to.have.property('message');",
+									"    pm.expect(jsonData).to.have.property('timestamp');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"forumId\": {{general_forum_id}},\n    \"message\": \"Welcome everyone to the wedding planning chat! Let's make this event amazing! 🎉\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/messages/gc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"gc"
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Forum Message - Venue",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{team_member_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"forumId\": {{venue_forum_id}},\n    \"message\": \"I've checked the venue layout. We need to confirm the seating arrangement for 150 guests.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/messages/gc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"gc"
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Forum Message - Vendor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendor_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"forumId\": {{vendor_forum_id}},\n    \"message\": \"Catering menu is finalized. We'll need the final guest count by next week.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/messages/gc",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"gc"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Forum Messages - General",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Messages list is an array\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.at.least(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/messages/gc/forum/{{general_forum_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"gc",
+								"forum",
+								"{{general_forum_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Direct Message - Team Member to Vendor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store direct message ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('team_vendor_dm_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{team_member_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"member2Id\": {{vendor_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/messages/direct",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"direct"
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Direct Message - Organizer to Team Member",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"// Store organizer-team DM ID",
+									"if (pm.response.code === 201) {",
+									"    const responseJson = pm.response.json();",
+									"    pm.collectionVariables.set('organizer_team_dm_id', responseJson.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"member2Id\": {{team_member_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/messages/direct",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"direct"
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Direct Message - Team to Vendor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{team_member_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dmId\": {{team_vendor_dm_id}},\n    \"message\": \"Hi! Need to confirm the catering setup time for the wedding day.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/messages/dm",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"dm"
+							]
+						}
+					}
+				},
+				{
+					"name": "Send Direct Message - Organizer to Team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"dmId\": {{organizer_team_dm_id}},\n    \"message\": \"Great work on the venue planning! Let's discuss the final details.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/messages/dm",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"dm"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Direct Messages - Team to Vendor",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"DM messages list is an array\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.at.least(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{team_member_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/messages/dm/{{team_vendor_dm_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"dm",
+								"{{team_vendor_dm_id}}"
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Direct Messages - Organizer to Team",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"DM messages list is an array\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"    pm.expect(jsonData.length).to.be.at.least(1);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/messages/dm/{{organizer_team_dm_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"messages",
+								"dm",
+								"{{organizer_team_dm_id}}"
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "📢 Notifications & Health",
+			"item": [
+				{
+					"name": "Get My Notifications",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Notifications list is an array\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.an('array');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifications/me",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"notifications",
+								"me"
+							]
+						}
+					}
+				},
+				{
+					"name": "Mark Notification Read",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Notification status changed to READ\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.status).to.eql('READ');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{organizer_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/notifications/1/read",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"notifications",
+								"1",
+								"read"
+							]
+						}
+					}
+				},
+				{
+					"name": "Health Check",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Health check response\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('status');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"url": {
+							"raw": "{{base_url}}/actuator/health",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"actuator",
+								"health"
+							]
+						}
+					}
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Set base URL if not already set",
+					"if (!pm.collectionVariables.get('base_url')) {",
+					"    pm.collectionVariables.set('base_url', 'http://localhost:8080/api');",
+					"}"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080/api"
+		}
+	]
+}
