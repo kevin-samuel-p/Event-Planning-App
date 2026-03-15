@@ -1,0 +1,139 @@
+HTTP POST
+URL: http://localhost:8080/api/events
+Input-Type: RequestBody
+Input: eventName (string), eventDate (LocalDate, YYYY-MM-DD), venue (string), eventType (string)
+Response: EventResponse { id (long), eventName (string), eventDate (LocalDate), venue (string), eventType (string), organizerId (long) }
+Desc: Create a new event for current organizer
+Sample-Request: {"eventName":"Summer Wedding Celebration","eventDate":"2026-04-12","venue":"Grand Garden Hotel","eventType":"Wedding"}
+Sample-Response: {"id":1,"eventName":"Summer Wedding Celebration","eventDate":"2026-04-12","venue":"Grand Garden Hotel","eventType":"Wedding","organizerId":1}
+Status: ✅ Working - Event created successfully
+
+HTTP GET
+URL: http://localhost:8080/api/events/my
+Input-Type: None
+Input: NULL
+Response: List<EventResponse> { id (long), eventName (string), eventDate (LocalDate), venue (string), eventType (string), organizerId (long) }
+Desc: List events for current user
+Sample-Request: NULL
+Sample-Response: [{"id":1,"eventName":"Summer Wedding Celebration","eventDate":"2026-04-12","venue":"Grand Garden Hotel","eventType":"Wedding","organizerId":1},{"id":2,"eventName":"Corporate Annual Gala","eventDate":"2026-05-12","venue":"Downtown Convention Center","eventType":"Conference","organizerId":1}]
+Status: ✅ Working - Returns user's events
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/budget
+Input-Type: Mixed
+Input: eventId (PathVariable), totalBudget (BigDecimal)
+Response: BudgetResponse { id (long), eventId (long), totalBudget (BigDecimal), spentAmount (BigDecimal) }
+Desc: Create a budget for an event
+Sample-Request: {"totalBudget":5000.00}
+Sample-Response: {"id":1,"eventId":1,"totalBudget":5000.00,"spentAmount":0.00}
+Status: ✅ Working - Budget created
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/vendors
+Input-Type: Mixed
+Input: eventId (PathVariable), vendorId (long), serviceType (string), contractStatus (ContractStatus: PENDING|ACTIVE|COMPLETED)
+Response: EventVendorResponse { id (long), eventId (long), vendorId (long), serviceType (string), contractStatus (ContractStatus) }
+Desc: Add a vendor to an event
+Sample-Request: {"vendorId":5,"serviceType":"Catering","contractStatus":"PENDING"}
+Sample-Response: {"id":1,"eventId":1,"vendorId":5,"serviceType":"Catering","contractStatus":"PENDING"}
+Status: ✅ Working - Vendor added to event
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/tasks
+Input-Type: Mixed
+Input: eventId (PathVariable), taskName (string), description (string), deadline (LocalDate), assignedToUserId (long)
+Response: TaskResponse { id (long), taskName (string), description (string), deadline (LocalDate), status (TaskStatus), eventId (long), assignedToUserId (long) }
+Desc: Add a task to an event
+Sample-Request: {"taskName":"Setup Venue","description":"Arrange tables and chairs","deadline":"2026-04-11","assignedToUserId":3}
+Sample-Response: {"id":1,"taskName":"Setup Venue","description":"Arrange tables and chairs","deadline":"2026-04-11","status":"TODO","eventId":1,"assignedToUserId":3}
+Status: ✅ Working - Task created
+
+HTTP PATCH
+URL: http://localhost:8080/api/tasks/{taskId}/status
+Input-Type: Mixed
+Input: taskId (PathVariable), status (TaskStatus: TODO|IN_PROGRESS|COMPLETED)
+Response: TaskResponse { id (long), taskName (string), description (string), deadline (LocalDate), status (TaskStatus), eventId (long), assignedToUserId (long) }
+Desc: Update task status
+Sample-Request: {"status":"IN_PROGRESS"}
+Sample-Response: {"id":1,"taskName":"Setup Venue","description":"Arrange tables and chairs","deadline":"2026-04-11","status":"IN_PROGRESS","eventId":1,"assignedToUserId":3}
+Status: ✅ Working - Task status updated
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/invitations
+Input-Type: Mixed
+Input: eventId (PathVariable), inviteeEmail (string), invitationType (InvitationType: GUEST|TEAM_MEMBER|VENDOR)
+Response: InvitationResponse { id (long), eventId (long), inviteeEmail (string), invitationType (InvitationType), rsvpStatus (RsvpStatus: PENDING|ACCEPTED|DECLINED), sentAt (Instant) }
+Desc: Send invitation to event
+Sample-Request: {"inviteeEmail":"guest@example.com","invitationType":"GUEST"}
+Sample-Response: {"id":1,"eventId":1,"inviteeEmail":"guest@example.com","invitationType":"GUEST","rsvpStatus":"PENDING","sentAt":"2026-03-15T21:00:00Z"}
+Status: ✅ Working - Invitation sent
+
+HTTP PATCH
+URL: http://localhost:8080/api/invitations/{invitationId}/rsvp
+Input-Type: Mixed
+Input: invitationId (PathVariable), rsvpStatus (RsvpStatus: ACCEPTED|DECLINED)
+Response: InvitationResponse { id (long), eventId (long), inviteeEmail (string), invitationType (InvitationType), rsvpStatus (RsvpStatus), sentAt (Instant) }
+Desc: Update RSVP status for invitation
+Sample-Request: {"rsvpStatus":"ACCEPTED"}
+Sample-Response: {"id":1,"eventId":1,"inviteeEmail":"guest@example.com","invitationType":"GUEST","rsvpStatus":"ACCEPTED","sentAt":"2026-03-15T21:00:00Z"}
+Status: ✅ Working - RSVP updated
+
+HTTP POST
+URL: http://localhost:8080/api/budgets/{budgetId}/payments
+Input-Type: Mixed
+Input: budgetId (PathVariable), amount (BigDecimal), paymentDate (LocalDate), description (string)
+Response: PaymentResponse { id (long), budgetId (long), amount (BigDecimal), paymentDate (LocalDate), description (string) }
+Desc: Add payment to budget
+Sample-Request: {"amount":1500.00,"paymentDate":"2026-03-15","description":"Venue deposit"}
+Sample-Response: {"id":1,"budgetId":1,"amount":1500.00,"paymentDate":"2026-03-15","description":"Venue deposit"}
+Status: ✅ Working - Payment recorded
+
+HTTP GET
+URL: http://localhost:8080/api/notifications/me
+Input-Type: None
+Input: NULL
+Response: List<NotificationResponse> { id (long), message (string), type (NotificationType), createdAt (Instant), read (boolean) }
+Desc: Get notifications for current user
+Sample-Request: NULL
+Sample-Response: [{"id":1,"message":"You have been invited to Summer Wedding Celebration","type":"INVITATION","createdAt":"2026-03-15T21:00:00Z","read":false}]
+Status: ✅ Working - Notifications retrieved
+
+HTTP PATCH
+URL: http://localhost:8080/api/notifications/{notificationId}/read
+Input-Type: Mixed
+Input: notificationId (PathVariable)
+Response: NotificationResponse { id (long), message (string), type (NotificationType), createdAt (Instant), read (boolean) }
+Desc: Mark notification as read
+Sample-Request: NULL
+Sample-Response: {"id":1,"message":"You have been invited to Summer Wedding Celebration","type":"INVITATION","createdAt":"2026-03-15T21:00:00Z","read":true}
+Status: ✅ Working - Notification marked as read
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/feedback
+Input-Type: Mixed
+Input: eventId (PathVariable), rating (int, 1-5), comment (string)
+Response: FeedbackResponse { id (long), eventId (long), userId (long), rating (int), comment (string), createdAt (Instant) }
+Desc: Submit feedback for event
+Sample-Request: {"rating":5,"comment":"Amazing event!"}
+Sample-Response: {"id":1,"eventId":1,"userId":1,"rating":5,"comment":"Amazing event!","createdAt":"2026-03-15T21:00:00Z"}
+Status: ✅ Working - Feedback submitted
+
+HTTP POST
+URL: http://localhost:8080/api/events/{eventId}/complete
+Input-Type: Mixed
+Input: eventId (PathVariable)
+Response: 204 No Content
+Desc: Mark event as completed
+Sample-Request: NULL
+Sample-Response: (No content)
+Status: ✅ Working - Event marked as completed
+
+HTTP GET
+URL: http://localhost:8080/api/events/{eventId}/report
+Input-Type: Mixed
+Input: eventId (PathVariable)
+Response: EventReportResponse { eventId (long), eventName (string), totalBudget (BigDecimal), totalSpent (BigDecimal), vendorCount (int), taskCount (int), completedTasks (int) }
+Desc: Generate event report
+Sample-Request: NULL
+Sample-Response: {"eventId":1,"eventName":"Summer Wedding Celebration","totalBudget":5000.00,"totalSpent":3500.00,"vendorCount":3,"taskCount":5,"completedTasks":4}
+Status: ✅ Working - Event report generated

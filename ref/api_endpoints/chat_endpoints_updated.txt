@@ -1,0 +1,99 @@
+HTTP POST
+URL: http://localhost:8080/api/group-chats
+Input-Type: RequestBody
+Input: gcName (string), eventId (long)
+Response: GroupChatResponse { id (long), gcName (string), joinCode (string), eventId (long), createdAt (Instant) }
+Desc: Create a new group chat for an event
+Sample-Request: {"gcName":"Summer Wedding Chat","eventId":1}
+Sample-Response: {"id":1,"gcName":"Summer Wedding Chat","joinCode":"ABC123","eventId":1,"createdAt":"2026-03-15T21:00:00Z"}
+Status: ✅ Working - Group chat created
+
+HTTP POST
+URL: http://localhost:8080/api/group-chats/join
+Input-Type: RequestBody
+Input: joinCode (string)
+Response: GroupChatResponse { id (long), gcName (string), joinCode (string), eventId (long), createdAt (Instant) }
+Desc: Join a group chat using join code
+Sample-Request: {"joinCode":"ABC123"}
+Sample-Response: {"id":1,"gcName":"Summer Wedding Chat","joinCode":"ABC123","eventId":1,"createdAt":"2026-03-15T21:00:00Z"}
+Status: ✅ Working - Joined group chat
+
+HTTP GET
+URL: http://localhost:8080/api/group-chats/{groupChatId}/members
+Input-Type: None
+Input: groupChatId (PathVariable)
+Response: List<ChatMemberResponse> { userId (long), name (string), email (string), role (Role), joinedAt (Instant) }
+Desc: Get members of a group chat
+Sample-Request: NULL
+Sample-Response: [{"userId":1,"name":"Alice Johnson","email":"alice@example.com","role":"ORGANIZER","joinedAt":"2026-03-15T21:00:00Z"}]
+Status: ✅ Working - Group chat members retrieved
+
+HTTP POST
+URL: http://localhost:8080/api/forums
+Input-Type: RequestBody
+Input: forumName (string), groupChatId (long)
+Response: ForumResponse { id (long), forumName (string), groupChatId (long), createdAt (Instant) }
+Desc: Create a forum within a group chat
+Sample-Request: {"forumName":"Venue Planning","groupChatId":1}
+Sample-Response: {"id":1,"forumName":"Venue Planning","groupChatId":1,"createdAt":"2026-03-15T21:00:00Z"}
+Status: ✅ Working - Forum created
+
+HTTP GET
+URL: http://localhost:8080/api/forums/group-chat/{groupChatId}
+Input-Type: None
+Input: groupChatId (PathVariable)
+Response: List<ForumResponse> { id (long), forumName (string), groupChatId (long), createdAt (Instant) }
+Desc: Get all forums for a group chat
+Sample-Request: NULL
+Sample-Response: [{"id":1,"forumName":"Venue Planning","groupChatId":1,"createdAt":"2026-03-15T21:00:00Z"},{"id":2,"forumName":"Catering","groupChatId":1,"createdAt":"2026-03-15T21:00:00Z"}]
+Status: ✅ Working - Forums retrieved
+
+HTTP POST
+URL: http://localhost:8080/api/messages/gc
+Input-Type: RequestBody
+Input: forumId (long), message (string)
+Response: GcMessageResponse { id (long), forumId (long), senderId (long), message (string), sentAt (Instant) }
+Desc: Send message to group chat forum
+Sample-Request: {"forumId":1,"message":"Looking forward to the event!"}
+Sample-Response: {"id":1,"forumId":1,"senderId":1,"message":"Looking forward to the event!","sentAt":"2026-03-15T21:00:00Z"}
+Status: ✅ Working - Message sent to forum
+
+HTTP GET
+URL: http://localhost:8080/api/messages/gc/forum/{forumId}
+Input-Type: None
+Input: forumId (PathVariable)
+Response: List<GcMessageResponse> { id (long), forumId (long), senderId (long), message (string), sentAt (Instant) }
+Desc: Get all messages in a forum
+Sample-Request: NULL
+Sample-Response: [{"id":1,"forumId":1,"senderId":1,"message":"Looking forward to the event!","sentAt":"2026-03-15T21:00:00Z"}]
+Status: ✅ Working - Forum messages retrieved
+
+HTTP POST
+URL: http://localhost:8080/api/messages/direct
+Input-Type: RequestBody
+Input: recipientId (long)
+Response: DirectMessageResponse { id (long), initiatorId (long), recipientId (long), createdAt (Instant) }
+Desc: Create a direct message conversation
+Sample-Request: {"recipientId":2}
+Sample-Response: {"id":1,"initiatorId":1,"recipientId":2,"createdAt":"2026-03-15T21:00:00Z"}
+Status: ✅ Working - Direct message created
+
+HTTP POST
+URL: http://localhost:8080/api/messages/dm
+Input-Type: RequestBody
+Input: dmId (long), message (string)
+Response: DmMessageResponse { id (long), dmId (long), senderId (long), message (string), sentAt (Instant) }
+Desc: Send message in direct message conversation
+Sample-Request: {"dmId":1,"message":"Hi! How are you?"}
+Sample-Response: {"id":1,"dmId":1,"senderId":1,"message":"Hi! How are you?","sentAt":"2026-03-15T21:00:00Z"}
+Status: ✅ Working - Direct message sent
+
+HTTP GET
+URL: http://localhost:8080/api/messages/dm/{dmId}
+Input-Type: None
+Input: dmId (PathVariable)
+Response: List<DmMessageResponse> { id (long), dmId (long), senderId (long), message (string), sentAt (Instant) }
+Desc: Get all messages in direct message conversation
+Sample-Request: NULL
+Sample-Response: [{"id":1,"dmId":1,"senderId":1,"message":"Hi! How are you?","sentAt":"2026-03-15T21:00:00Z"}]
+Status: ✅ Working - Direct messages retrieved

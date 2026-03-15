@@ -74,11 +74,9 @@ public class SecurityConfig {
         System.out.println("JWT Secret being used: " + secret);
         System.out.println("JWT Secret length: " + secret.length());
         
-        // Use the actual secret from application.yml
+        // Use the working ImmutableSecret approach
         SecretKeySpec key = new SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
-        
-        // Create JWT encoder using the working approach - no generics
-        return new NimbusJwtEncoder(new com.nimbusds.jose.jwk.source.ImmutableSecret(key));
+        return new NimbusJwtEncoder(new ImmutableSecret(key));
     }
 
     @Bean

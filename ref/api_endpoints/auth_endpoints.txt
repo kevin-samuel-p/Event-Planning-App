@@ -4,8 +4,9 @@ Input-Type: RequestBody
 Input: name (string), email (string), phone (string), password (string, min 8), role (Role: ORGANIZER|VENDOR|TEAM_MEMBER|GUEST)
 Response: AuthResponse { userId (long), email (string), role (Role), token (string) }
 Desc: Register a new user account.
-Sample-Request: {"name":"Asha Patel","email":"asha@example.com","phone":"+1-555-0100","password":"Password123","role":"ORGANIZER"}
-Sample-Response: {"userId":1,"email":"asha@example.com","role":"ORGANIZER","token":"eyJhbGciOiJIUzI1NiJ9.mock"}
+Sample-Request: {"name":"Alice Johnson","email":"alice@example.com","phone":"+1-555-0100","password":"password123","role":"ORGANIZER"}
+Sample-Response: {"userId":1,"email":"alice@example.com","role":"ORGANIZER","token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGljZUBleGFtcGxlLmNvbSIsInJvbGUiOiJPUkdBTklaRVIiLCJ1c2VySWQiOjEsImlhdCI6MTc3MzQ4MjMwMywiZXhwIjoxNzczNDg1OTAzfQ.5ajVh2D0DZApPtHoTJAbkYxP6L5jOhVCOlOnRswlXXY"}
+Status: ✅ Working - JWT authentication fixed
 
 HTTP POST
 URL: http://localhost:8080/api/auth/login
@@ -13,5 +14,6 @@ Input-Type: RequestBody
 Input: email (string), password (string)
 Response: AuthResponse { userId (long), email (string), role (Role), token (string) }
 Desc: Authenticate a user and return a token.
-Sample-Request: {"email":"asha@example.com","password":"Password123"}
-Sample-Response: {"userId":1,"email":"asha@example.com","role":"ORGANIZER","token":"eyJhbGciOiJIUzI1NiJ9.mock"}
+Sample-Request: {"email":"alice@example.com","password":"password123"}
+Sample-Response: {"userId":1,"email":"alice@example.com","role":"ORGANIZER","token":"eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhbGljZUBleGFtcGxlLmNvbSIsInJvbGUiOiJPUkdBTklaRVIiLCJ1c2VySWQiOjEsImlhdCI6MTc3MzQ4MjMwMywiZXhwIjoxNzczNDg1OTAzfQ.5ajVh2D0DZApPtHoTJAbkYxP6L5jOhVCOlOnRswlXXY"}
+Status: ✅ Working - Returns valid JWT token
