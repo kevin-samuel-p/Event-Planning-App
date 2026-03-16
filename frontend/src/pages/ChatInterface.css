@@ -1,0 +1,683 @@
+/* Main Chat Interface */
+.chat-interface {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+/* Header */
+.chat-header {
+  background: #667eea;
+  color: white;
+  padding: 1rem 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-left h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.header-right {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.admin-menu-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background-color 0.3s;
+}
+
+.admin-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.close-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Chat Body */
+.chat-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Forums Panel */
+.forums-panel {
+  width: 250px;
+  background: white;
+  border-right: 1px solid #e9ecef;
+  display: flex;
+  flex-direction: column;
+}
+
+.forums-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.forums-header h4 {
+  margin: 0;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.forums-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.forum-item {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-bottom: 1px solid #f8f9fa;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.forum-item:hover {
+  background: #f8f9fa;
+}
+
+.forum-item.active {
+  background: #667eea;
+  color: white;
+}
+
+.forum-name {
+  font-weight: 500;
+  font-size: 0.9rem;
+}
+
+.forum-time {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
+/* Messages Panel */
+.messages-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+}
+
+.messages-container {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1rem;
+}
+
+.message {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-radius: 8px;
+  transition: background-color 0.3s;
+}
+
+.message:hover {
+  background: #f8f9fa;
+}
+
+.system-message {
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  font-style: italic;
+  color: #666;
+}
+
+.removed-message {
+  background: #fff3e0;
+  border-left: 4px solid #ff9800;
+  color: #999;
+  font-style: italic;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.message-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #667eea;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-right: 0.75rem;
+}
+
+.message-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.message-sender {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.message-time {
+  font-size: 0.75rem;
+  color: #666;
+}
+
+.edited-indicator {
+  font-size: 0.7rem;
+  color: #999;
+  font-style: italic;
+}
+
+.message-content {
+  margin-left: 2.75rem;
+}
+
+.message-content p {
+  margin: 0;
+  color: #333;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.edit-message-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.edit-input {
+  padding: 0.5rem;
+  border: 2px solid #667eea;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.save-btn, .cancel-btn {
+  padding: 0.4rem 0.8rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.save-btn {
+  background: #28a745;
+  color: white;
+}
+
+.save-btn:hover {
+  background: #218838;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.cancel-btn:hover {
+  background: #5a6268;
+}
+
+.message.highlighted {
+  background: #fff3cd !important;
+  border-left: 4px solid #ffc107;
+}
+
+/* Mention Suggestions */
+.mention-suggestions {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1002;
+  margin-bottom: 0.5rem;
+}
+
+.mention-suggestion {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.mention-suggestion:hover,
+.mention-suggestion.active {
+  background: #f8f9fa;
+}
+
+.mention-suggestion:last-child {
+  border-bottom: none;
+}
+
+.mention-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #667eea;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-right: 0.75rem;
+}
+
+.mention-info {
+  flex: 1;
+}
+
+.mention-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.mention-role {
+  font-size: 0.8rem;
+  color: #666;
+  text-transform: capitalize;
+}
+
+/* Message Input */
+.message-input-container {
+  padding: 1rem;
+  border-top: 1px solid #e9ecef;
+  background: white;
+  position: relative;
+}
+
+.message-form {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.attach-btn {
+  background: #6c757d;
+  color: white;
+  border: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background-color 0.3s;
+}
+
+.attach-btn:hover {
+  background: #5a6268;
+}
+
+.message-input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  transition: border-color 0.3s;
+}
+
+.message-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.send-btn {
+  background: #667eea;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.3s;
+}
+
+.send-btn:hover {
+  background: #5a67d8;
+}
+
+/* Members Panel */
+.members-panel {
+  width: 200px;
+  background: white;
+  border-left: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.members-panel.hide {
+  width: 40px;
+  overflow: hidden;
+}
+
+.members-panel.hide .members-list {
+  display: none;
+}
+
+.members-panel.hide .members-header h4 {
+  display: none;
+}
+
+.members-header {
+  padding: 1rem;
+  border-bottom: 1px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.members-header h4 {
+  margin: 0;
+  color: #333;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.toggle-panel-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem;
+}
+
+.members-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem;
+  border-radius: 6px;
+  margin-bottom: 0.25rem;
+  transition: background-color 0.3s;
+}
+
+.member-item:hover {
+  background: #f8f9fa;
+}
+
+.member-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #6c757d;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  margin-right: 0.5rem;
+}
+
+.member-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-name {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #333;
+}
+
+.member-status {
+  font-size: 0.7rem;
+  margin-top: 0.1rem;
+}
+
+.member-status.online {
+  color: #28a745;
+}
+
+.member-status.offline {
+  color: #6c757d;
+}
+
+/* Context Menus */
+.context-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  min-width: 150px;
+}
+
+.context-menu button {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.context-menu button:hover {
+  background: #f8f9fa;
+}
+
+.context-menu button:first-child {
+  border-radius: 6px 6px 0 0;
+}
+
+.context-menu button:last-child {
+  border-radius: 0 0 6px 6px;
+}
+
+/* Admin Menu Dropdown */
+.admin-menu-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+  min-width: 180px;
+  margin-top: 0.5rem;
+}
+
+.admin-menu-dropdown button {
+  width: 100%;
+  padding: 0.5rem 1rem;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background-color 0.3s;
+}
+
+.admin-menu-dropdown button:hover {
+  background: #f8f9fa;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1002;
+}
+
+.modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  min-width: 300px;
+}
+
+.modal h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.rename-input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #e9ecef;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+.rename-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.btn-primary, .btn-secondary {
+  flex: 1;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 4px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.btn-primary {
+  background: #667eea;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #5a67d8;
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+/* Menu Overlay */
+.menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .forums-panel {
+    width: 200px;
+  }
+  
+  .members-panel {
+    width: 60px;
+  }
+  
+  .member-name {
+    display: none;
+  }
+  
+  .message-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .forums-panel {
+    width: 150px;
+  }
+  
+  .forum-time {
+    display: none;
+  }
+  
+  .message-form {
+    flex-wrap: wrap;
+  }
+  
+  .message-input {
+    flex: 1 1 100%;
+    margin-bottom: 0.5rem;
+  }
+}

@@ -1,0 +1,15 @@
+Great! Now let's work on the View Details page.
+
+I can see a list of Action buttons under the Actions heading (Manage Budget (highlighted in blue), Manage Tasks, Manage Vendors, Send Invitations, View Chat). 
+
+1. I want you to change the layout. All these buttons right now are arranged horizontally, and they span too much vertical height. (Too much inner vertical padding) Make the buttons with little vertical padding, more horizontal padding, and arrange them such that they flex vertically. All can be blue, and there should be three buttons: 
+Manage ▶ (with a dropdown for differently styled button list (vertical flex) "Budget" "Tasks" "Vendors"
+Invite
+Chat
+
+The buttons inside the manage dropdown can have a smaller size, and all should pop up (and/or) change color upon hover. Stylize the Manage (with dropdown), Invite, and Chat buttons such that they are all blue by default.
+
+2. Right now, the buttons are all just stylistic placeholders. Assign the required functionality. 
+For the last task where an API endpoint had to be created to edit an event, you went scanning the entire codebase. Don't do that unless necessary. We already created API endpoint docs in reference/api_endpoints for this very reason, so that lookup for API endpoints will be very fast during frontend development.  If you cannot find the required endpoint, THEN scan the respective controllers/directory in the backend codebase.
+
+If you have any queries, please do ask and get them clarified before proceeding.

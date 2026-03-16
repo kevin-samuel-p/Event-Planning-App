@@ -43,6 +43,11 @@ public class EventWorkflowController {
         return service.createEvent(request);
     }
 
+    @PatchMapping("/events/{eventId}")
+    public EventResponse updateEvent(@PathVariable Long eventId, @Valid @RequestBody CreateEventRequest request) {
+        return service.updateEvent(eventId, request);
+    }
+
     @GetMapping("/events/my")
     public List<EventResponse> myEvents() {
         return service.myEvents();

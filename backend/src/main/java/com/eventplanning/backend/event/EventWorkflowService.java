@@ -95,6 +95,29 @@ public class EventWorkflowService {
         return EventResponse.from(event);
     }
 
+    @Transactional
+    public EventResponse updateEvent(Long eventId, CreateEventRequest request) {
+        User organizer = currentUserProvider.requireCurrentUser();
+        requireRole(organizer, Role.ORGANIZER);
+
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event not found"));
+
+        // Check if user owns the event
+        if (!event.getOrganizer().getId().equals(organizer.getId())) {
+            throw new AccessDeniedException("You can only edit your own events");
+        }
+
+        // Update event fields
+        event.setEventName(request.eventName());
+        event.setEventDate(request.eventDate());
+        event.setVenue(request.venue());
+        event.setEventType(request.eventType());
+
+        Event updatedEvent = eventRepository.save(event);
+        return EventResponse.from(updatedEvent);
+    }
+
     public List<EventResponse> myEvents() {
         User organizer = currentUserProvider.requireCurrentUser();
         requireRole(organizer, Role.ORGANIZER);

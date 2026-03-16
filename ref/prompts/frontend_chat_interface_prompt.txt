@@ -1,0 +1,19 @@
+1, 2, 3: Yes, create new pages. This is the cleanest approach because we might eventually need to integrate new features. For a lot of features (especially calling the API or linking to other pages) it's better to have a separate page than a popup/modal on the same page.
+
+4: Depends, what is your understanding of a "complete chat interface"? What I need is 
+- the title of the group chat on a titlebar at the center of the screen, center-aligned, , with an X on the right that closes the chat interface and returns to the Event page (so maybe a modal window could work for this?) On the left of the X at the far right of the top title bar, there should a symbol with three vertical dots for a menu placeholder that will potentially contain options for administrator actions, notification settings, etc.
+- a scrollable navigable list (of fixed width) on the left, containing forums on the GC that the user can currently access/see. 
+- Clicking a forum from the list will navigate to that forum by pulling the messages and contents of that forum, so that users can read and post. The selected forum will be focused in on the center of the page, between the left and right panes. The messages will be flexed vertically with the senders' usernames and icons, similar to WhatsApp/Discord. There will be a textbox on the bottom-center with an additional plus sign on the left of the textbox to add attachments (optional, if the functionality for this attachment feature isn't implemented yet then just add the plus sign as a stylistic placeholder, we'll work on that later) and a small send button on the rightside (pressing Enter should do this action by default).
+- Admins should be able to manage forums by right clicking on a forum in the left pane. This will include renaming a forum, adding or removing members (that is; members' visibility), managing user permissions, etc. If a forum is renamed, there should be a non-removable message published automatically in the forum chat stating that so-and-so username changed the forum title to so-and-so.
+- Users should be able to mention/tag other users by @<their username>. THis should send a message notification to that user specifically. Admins (like the Organizers) should be allowed to tag @everyone to send a notification to everybody.
+- A user (by default) can right-click on their own message. Right-clicking should show a menu that consists of two options: `Edit Message` and `Delete Message`. Admins should additionally be allowed to right-click on other (non-admin) users' messages to `Remove Message`.
+- On the right, there will be a small (slidable) panel showing usernames / icons (when minimized) of the members who have view permissions in the given forum. This is very similar to Discord (social media platform)'s interface, but maintain the themes and styles that we've already been using for the app. - Keep in mind things that can potentially be added later, like 
+    * a small icon for each user to denote user availability (online/offline) on the rightside panel (again, similar to Discord), 
+    * attachments in chat (if not already implemented), 
+    * pinning messages (similar to WhatsApp/Discord),
+etc. 
+
+5: I think here we can implement a form instead of a whole page. Also include an option to customize the invitation message. There will be a default message, but whoever's sending the invite should be able to customize it. The page should also show guests who have already been sent an invitation. Signal this using a check mark and deactivating buttons for guests that have already been invited. This should only be done if the invitation was sent successfully.
+
+
+And yes, your understanding is correct. Focus on the layout and styling first, so that we get all our design placeholders, and then add functionality. Thank you for your inquisition.

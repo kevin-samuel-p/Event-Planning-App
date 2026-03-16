@@ -1,0 +1,32 @@
+Few things to address:
+
+1. I found this in the console when I tried sending an invitation.
+``InvitationManagement.js:174 Encountered two children with the same key, `2`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.`` Please fix the logic. Cuz this prevents me from actually sending invitations. It appears that new invitations are sent, but on refresh, it's clear that they haven't been stored or sent.
+
+2. Great job with the chat interface. Two things could be improved: 
+  - a message can appear highlighted on a user's screen (in bright yellow) if it mentions them. This, of course, includes @everyone pings. 
+  - when a user types the @ symbol, there's a float list above the symbol, show them the users they can tag. They can either continue typing the username to tag the person, or click the username from the list and automatically tag them in the message. 
+One thing has to be FIXED:
+- The right-side panel (which has to be slidable) is not slidable. It has a dropdown arrow, and when clicked, the panel slides away, while a portion of it still protrudes with the caption onto the screen. The worst part is that the panel cannot be reopened or reminimized. Please fix this.
+
+3. For all the Management pages, I think it would be better to have a visible "<- Back" button on the top right (to the far right of the left-aligned heading) for users to click, and that would take them back to the respective event page. Cuz right now user has to manually click the browser's back button (or use Alt + Left) and this is not very user-friendly.
+
+4. On the Invitation Management page, remove the Send Invitations heading and the Send New Invitation button. They are unnecessary as we already have the option to invite available guests. Also, remove the Invited✔ label from the divs in the Invitation Status section, it is superfluous as only guests who were sent invitations are listed in this section anyway. Moreover, it overlaps with the preexisting ACCEPTED/PENDING label, which is why I want it removed. Great job on the UI, otherwise.
+
+5. On the Budget Management page, reduce the width of the Add Payment button so that the button's border doesn't touch the Payments label (there should be a little bit of horizontal indentation between the label and the button). Each payment div should display ``
+<name of the transactor> -> <name of the event vendor>
+<payment amount>
+<date>                                        <payment status in a label>
+``
+so far I like that you have included the payment amount, date, and payment status label. Keep those and add the other two features.
+
+6. On the Budget Management page (again), create a sliding panel on the right that can be opened with an arrow. Near the arrow, there should be a label saying "View Budget Expenditure". There should be a slider betweeen a weekly and monthly chart, plotting amount of budget spent weekly and monthly on a chart (the data for this will come from the payments and budgets tables). Under the chart, show amounts like "budget spent this week/month (depending on what is selected)", "savings %", rate of decrease (or increase) in budget spent compared to last time, compared to the median, etc. Some data analytics/stastical trends like that that look fancy schmancy. I call it, you do it. This panel should once again be closable, with the arrow still peeking out so it can be reopened. Once opened, the graph should be cached so that it doesn't lead to multiple API calls/rendering lag.
+
+7. On the Task Management page, it's nice that the Tasks (2) heading and the Create Task button are on the same row, but right align the button so that it's on the right side of the screen, doesn't touch the heading, and doesn't consume more space on the screen than needed.
+
+8. Refer to task 7 (above), repeat the same for Vendors(2) heading and Add Vendor button in the Vendor management page.
+
+9. On the event page (for each respective event), put the Event Information and Actions heading on the same row, such that the list of actionable buttons are directly UNDER the Actions heading, and not to its side like it is now. Also, clicking the dropdown on the Manage button should Change the Play symbol in the button label to a dropdown symbol. Adjust the padding on the Invite and Chat buttons so that they match the current level of padding of the Manage button. It's okay if they don't span the bottom of the div. Finally, remove Event Id from the event information column. That's extraneous for users to know.
+
+Once we are done with these tasks, we can begin with API endpoint integration. I'm aware you're using dummy data for the frontend design prototype, but whatever's shown should be reflected in the database, and only what's in the database should be shown.
+
