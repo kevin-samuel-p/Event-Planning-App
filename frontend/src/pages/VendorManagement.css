@@ -21,17 +21,18 @@
 }
 
 .btn-back {
-  background: #6c757d;
-  color: white;
-  border: none;
+  background: rgba(52, 58, 64, 0.8);
+  color: #333;
+  border: 1px solid rgba(52, 58, 64, 0.9);
   padding: 0.5rem 1rem;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
 }
 
 .btn-back:hover {
-  background: #5a6268;
+  background: rgba(52, 58, 64, 0.9);
+  border-color: rgba(52, 58, 64, 1);
 }
 
 .vendor-content {
@@ -43,7 +44,8 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+  gap: 1rem;
 }
 
 .section-header h3 {
@@ -272,4 +274,54 @@
   height: 50vh;
   font-size: 1.2rem;
   color: #667eea;
+}
+
+/* Autocomplete Styles */
+.autocomplete-container {
+  position: relative;
+}
+
+.vendor-suggestions {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.suggestion-item {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #f8f9fa;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.suggestion-item:hover {
+  background: #f8f9fa;
+}
+
+.suggestion-item:last-child {
+  border-bottom: none;
+}
+
+.suggestion-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.suggestion-type {
+  font-size: 0.85rem;
+  color: #666;
+  background: #e9ecef;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
 }

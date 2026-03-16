@@ -293,6 +293,14 @@ const BudgetManagement = () => {
           </div>
         )}
       </div>
+
+      {/* Fixed Toggle Button */}
+      <button 
+        className="fixed-toggle-btn"
+        onClick={() => setShowAnalyticsPanel(!showAnalyticsPanel)}
+      >
+        {showAnalyticsPanel ? '◀' : '▶'}
+      </button>
     </div>
   );
 };

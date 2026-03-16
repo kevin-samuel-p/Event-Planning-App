@@ -21,17 +21,18 @@
 }
 
 .btn-back {
-  background: #6c757d;
-  color: white;
-  border: none;
+  background: rgba(52, 58, 64, 0.8);
+  color: #333;
+  border: 1px solid rgba(52, 58, 64, 0.9);
   padding: 0.5rem 1rem;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
 }
 
 .btn-back:hover {
-  background: #5a6268;
+  background: rgba(52, 58, 64, 0.9);
+  border-color: rgba(52, 58, 64, 1);
 }
 
 .task-content {
@@ -148,6 +149,7 @@
   border: 2px solid #ddd;
   border-radius: 5px;
   font-size: 0.9rem;
+  background: white;
   cursor: pointer;
   transition: border-color 0.3s;
 }
@@ -156,6 +158,27 @@
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.status-display {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 5px;
+  border: 1px solid #e9ecef;
+}
+
+.status-label {
+  font-weight: 600;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.status-value {
+  color: #333;
+  font-weight: 500;
 }
 
 .modal-overlay {

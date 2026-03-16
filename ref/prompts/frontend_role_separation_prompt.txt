@@ -1,0 +1,13 @@
+Some fixes that need to be made:
+
+1. On the Budget Management page, there is no gap between the Payments heading and the Add Payment button. Please maintain a slight gap such that the button doesn't touch the heading.
+
+2. Again on the Budget Management page, the silding right panel is not openable/closable. Once closed, it cannot be opened as the arrow disappears from sight. Please fix this.
+
+3. On the Vendor Management page, in the modal used to Add Vendor, change the Vendor User ID bit to Vendor name. While the name is being typed, there should be up to 4 vendors with a similar name matched from the existing list of vendors in the database, and shown in a list below the textbox, similar to how the Google Search bar works. If a user clicks on a vendor name from the list, it automatically fills in the box. Please implement this.
+
+4. Again on the Vendor Management page, there is no gap between the Vendors (2) heading and the Add Vendor button. Please maintain a slight gap such that the button doesn't touch the heading.
+
+5. Just to be clear on separation of roles: only organizers should be able to see the create task, edit event, etc. In the Task Management page, organizers should only be able to see the Todo/In Progress/Done label for each task, they should not be allowed to mark the status of a task. The ability to mark a task's status should be given only to the person who was assigned a task. Similarly, a non-organizer should only be able to see tasks assigned to them (instead of assigned to, there will be an assigned by descriptor). Non-organizer roles should be able to set the status of their tasks in Task Management.
+
+Please see to it that all this is done.

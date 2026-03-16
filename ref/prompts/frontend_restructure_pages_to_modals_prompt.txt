@@ -1,0 +1,30 @@
+Some things that still need to be fixed:
+
+1. Yes, now we have pop-ups, but I need the same button layout as before: 
+Manage dropdown list with Budget, Tasks and Vendors as options
+Invitations
+Chat
+and this button layout needs to be on the right side of the details.
+Also, remove the Edit Event button from the View Details modal, because there is already an Edit button rendered for each event on the dashboard. 
+So the layout for the popup should be 
+
+[Event Title]
+
+[Date]    Manage
+
+[Venue]   Invitations
+
+[Type]    Chat
+
+Please change this.
+
+2. Remove the Quick Actions section from the dashboard. Instead, on the upper ribbon, where it says "Welcome, User!" and the Logout button is present, have three buttons to the left of the logout button.
+From left to right, these are the buttons with their respective symbols/icons:
+Plus Symbol/Icon - Create New Event (label on hover)
+Email/Letter Symbol/Icon - View Invitations (label on hover)
+Bell - Notifications (label on hover)
+Make sure that the buttons blend in with the white background of the header ribbon on the dashboard page.
+
+3. Just remove Quick Actions, but the external div remain there. The space can be used for personal DMs, etc.
+
+4. Create New Event and Edit button for respect events should open to modal popups as well, with similar behavior to View Details. Can you remove the extra webpages? Thanks.

@@ -10,6 +10,9 @@ const TaskManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateTask, setShowCreateTask] = useState(false);
+  
+  // Mock current user - in real app, get from auth context
+  const currentUser = { id: 1, name: 'Alice Johnson', role: 'ORGANIZER' };
 
   const [taskForm, setTaskForm] = useState({
     taskName: '',
@@ -51,6 +54,33 @@ const TaskManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Filter tasks based on user role
+  const getVisibleTasks = () => {
+    if (currentUser.role === 'ORGANIZER') {
+      return tasks; // Organizers see all tasks
+    } else {
+      return tasks.filter(task => task.assignedToUserId === currentUser.id); // Non-organizers see only their tasks
+    }
+  };
+
+  const canUpdateTaskStatus = (task) => {
+    if (currentUser.role === 'ORGANIZER') {
+      return false; // Organizers cannot update task status
+    } else {
+      return task.assignedToUserId === currentUser.id; // Users can only update their own tasks
+    }
+  };
+
+  const handleStatusUpdate = (taskId, newStatus) => {
+    if (!canUpdateTaskStatus(tasks.find(t => t.id === taskId))) {
+      return; // Don't allow status update
+    }
+    
+    setTasks(tasks.map(task => 
+      task.id === taskId ? { ...task, status: newStatus } : task
+    ));
   };
 
   const handleCreateTask = async (e) => {
@@ -122,7 +152,7 @@ const TaskManagement = () => {
           </div>
         ) : (
           <div className="tasks-grid">
-            {tasks.map(task => (
+            {getVisibleTasks().map(task => (
               <div key={task.id} className="task-card">
                 <div className="task-header-info">
                   <h4>{task.taskName}</h4>
@@ -141,20 +171,31 @@ const TaskManagement = () => {
                     <strong>Deadline:</strong> {new Date(task.deadline).toLocaleDateString()}
                   </div>
                   <div className="task-assignee">
-                    <strong>Assigned to:</strong> {task.assignedToName}
+                    {currentUser.role === 'ORGANIZER' ? (
+                      <><strong>Assigned to:</strong> {task.assignedToName}</>
+                    ) : (
+                      <><strong>Assigned by:</strong> Task Manager</>
+                    )}
                   </div>
                 </div>
 
                 <div className="task-actions">
-                  <select 
-                    value={task.status}
-                    onChange={(e) => handleUpdateStatus(task.id, e.target.value)}
-                    className="status-select"
-                  >
-                    <option value="TODO">To Do</option>
-                    <option value="IN_PROGRESS">In Progress</option>
-                    <option value="DONE">Done</option>
-                  </select>
+                  {canUpdateTaskStatus(task) ? (
+                    <select 
+                      value={task.status}
+                      onChange={(e) => handleStatusUpdate(task.id, e.target.value)}
+                      className="status-select"
+                    >
+                      <option value="TODO">To Do</option>
+                      <option value="IN_PROGRESS">In Progress</option>
+                      <option value="DONE">Done</option>
+                    </select>
+                  ) : (
+                    <div className="status-display">
+                      <span className="status-label">Status:</span>
+                      <span className="status-value">{task.status.replace('_', ' ')}</span>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

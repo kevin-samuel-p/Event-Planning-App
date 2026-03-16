@@ -44,13 +44,15 @@
 .event-info {
   padding: 2rem;
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  justify-content: space-between;
   gap: 2rem;
 }
 
 .info-section {
   display: flex;
   flex-direction: column;
+  justify-content: space-between;
   gap: 1rem;
 }
 
@@ -100,7 +102,6 @@
 
 .dropdown-btn {
   width: 100%;
-  text-align: left;
   padding: 0.5rem 1rem;
   background: #667eea;
   color: white;

@@ -12,10 +12,12 @@ const VendorManagement = () => {
   const [showAddVendor, setShowAddVendor] = useState(false);
 
   const [vendorForm, setVendorForm] = useState({
-    vendorId: '',
+    vendorName: '',
     serviceType: '',
     contractStatus: 'PENDING'
   });
+  const [vendorSuggestions, setVendorSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     fetchVendors();
@@ -48,17 +50,43 @@ const VendorManagement = () => {
     }
   };
 
+  const handleVendorNameChange = (e) => {
+    const value = e.target.value;
+    setVendorForm({...vendorForm, vendorName: value});
+    
+    if (value.length > 0) {
+      // Filter existing vendors based on name
+      const filtered = vendors.filter(vendor => 
+        vendor.vendorName.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 4); // Limit to 4 suggestions
+      setVendorSuggestions(filtered);
+      setShowSuggestions(true);
+    } else {
+      setVendorSuggestions([]);
+      setShowSuggestions(false);
+    }
+  };
+
+  const handleVendorSelect = (vendor) => {
+    setVendorForm({
+      ...vendorForm,
+      vendorName: vendor.vendorName,
+      serviceType: vendor.serviceType
+    });
+    setShowSuggestions(false);
+  };
+
   const handleAddVendor = async (e) => {
     e.preventDefault();
     try {
       const response = await eventAPI.addVendor(id, vendorForm);
       setVendors([...vendors, { 
         ...response, 
-        vendorName: `Vendor ${vendorForm.vendorId}` 
+        vendorName: vendorForm.vendorName 
       }]);
       setShowAddVendor(false);
       setVendorForm({
-        vendorId: '',
+        vendorName: '',
         serviceType: '',
         contractStatus: 'PENDING'
       });
@@ -145,14 +173,31 @@ const VendorManagement = () => {
             <h3>Add Vendor</h3>
             <form onSubmit={handleAddVendor}>
               <div className="form-group">
-                <label>Vendor User ID:</label>
-                <input
-                  type="number"
-                  value={vendorForm.vendorId}
-                  onChange={(e) => setVendorForm({...vendorForm, vendorId: e.target.value})}
-                  required
-                />
-                <small>Enter the User ID of an existing vendor account</small>
+                <label>Vendor Name:</label>
+                <div className="autocomplete-container">
+                  <input
+                    type="text"
+                    value={vendorForm.vendorName}
+                    onChange={handleVendorNameChange}
+                    onFocus={() => vendorForm.vendorName.length > 0 && setShowSuggestions(true)}
+                    placeholder="Start typing vendor name..."
+                    required
+                  />
+                  {showSuggestions && vendorSuggestions.length > 0 && (
+                    <div className="vendor-suggestions">
+                      {vendorSuggestions.map((vendor, index) => (
+                        <div 
+                          key={vendor.id}
+                          className="suggestion-item"
+                          onClick={() => handleVendorSelect(vendor)}
+                        >
+                          <div className="suggestion-name">{vendor.vendorName}</div>
+                          <div className="suggestion-type">{vendor.serviceType}</div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="form-group">
                 <label>Service Type:</label>

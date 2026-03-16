@@ -21,17 +21,18 @@
 }
 
 .btn-back {
-  background: #6c757d;
-  color: white;
-  border: none;
+  background: rgba(52, 58, 64, 0.8);
+  color: #333;
+  border: 1px solid rgba(52, 58, 64, 0.9);
   padding: 0.5rem 1rem;
   border-radius: 5px;
   cursor: pointer;
-  transition: background-color 0.3s;
+  transition: all 0.3s;
 }
 
 .btn-back:hover {
-  background: #5a6268;
+  background: rgba(52, 58, 64, 0.9);
+  border-color: rgba(52, 58, 64, 1);
 }
 
 .invitation-content {
