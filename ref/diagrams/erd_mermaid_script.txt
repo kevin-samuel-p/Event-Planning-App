@@ -28,6 +28,28 @@ TASK {
     int assigned_to FK
 }
 
+SESSION {
+    int session_id PK
+    string session_name
+    time start_time
+    time end_time
+    text description
+    string status
+    string type
+    int event_id FK
+    int created_by FK
+    date created_at
+    date updated_at
+}
+
+SESSION_ASSIGNMENT {
+    int assignment_id PK
+    int session_id FK
+    int user_id FK
+    string role
+    date assigned_at
+}
+
 EVENT_VENDOR {
     int event_vendor_id PK
     int event_id FK
@@ -141,6 +163,11 @@ DM_MESSAGE {
 USER ||--o{ EVENT : creates
 EVENT ||--o{ TASK : has
 USER ||--o{ TASK : assigned_to
+
+EVENT ||--o{ SESSION : contains
+USER ||--o{ SESSION : creates
+SESSION ||--o{ SESSION_ASSIGNMENT : has
+USER ||--o{ SESSION_ASSIGNMENT : assigned_to
 
 EVENT ||--|| BUDGET : has
 BUDGET ||--o{ PAYMENT : records

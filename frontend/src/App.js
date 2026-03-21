@@ -9,6 +9,7 @@ import EventDetails from './pages/EventDetails';
 import BudgetManagement from './pages/BudgetManagement';
 import TaskManagement from './pages/TaskManagement';
 import VendorManagement from './pages/VendorManagement';
+import VendorContact from './pages/VendorContact';
 import InvitationManagement from './pages/InvitationManagement';
 import ChatInterface from './pages/ChatInterface';
 import Invitations from './pages/Invitations';
@@ -61,6 +62,11 @@ function App() {
             <Route path="/events/:id/vendors" element={
               <ProtectedRoute>
                 <VendorManagement />
+              </ProtectedRoute>
+            } />
+            <Route path="/vendor-contact/:vendorId" element={
+              <ProtectedRoute>
+                <VendorContact />
               </ProtectedRoute>
             } />
             <Route path="/events/:id/invitations" element={

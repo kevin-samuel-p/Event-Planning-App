@@ -1,18 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import './TaskManagement.css';
 
 const TaskManagement = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showCreateTask, setShowCreateTask] = useState(false);
-  
-  // Mock current user - in real app, get from auth context
-  const currentUser = { id: 1, name: 'Alice Johnson', role: 'ORGANIZER' };
 
   const [taskForm, setTaskForm] = useState({
     taskName: '',
@@ -27,30 +26,14 @@ const TaskManagement = () => {
 
   const fetchTasks = async () => {
     try {
-      // For now, we'll simulate task data
-      // In a real app, you'd call eventAPI.getTasks(id)
-      setTasks([
-        {
-          id: 1,
-          taskName: 'Setup Venue',
-          description: 'Arrange tables and chairs',
-          deadline: '2026-04-11',
-          status: 'TODO',
-          assignedToUserId: 3,
-          assignedToName: 'John Doe'
-        },
-        {
-          id: 2,
-          taskName: 'Catering Arrangement',
-          description: 'Coordinate with catering service',
-          deadline: '2026-04-10',
-          status: 'IN_PROGRESS',
-          assignedToUserId: 4,
-          assignedToName: 'Jane Smith'
-        }
-      ]);
+      setLoading(true);
+      const tasksData = await eventAPI.getTasks(id);
+      setTasks(tasksData || []);
+      setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch tasks');
+      console.error('Failed to fetch tasks:', err);
+      setError('Failed to load tasks. Please try again.');
+      setTasks([]);
     } finally {
       setLoading(false);
     }
@@ -58,36 +41,43 @@ const TaskManagement = () => {
 
   // Filter tasks based on user role
   const getVisibleTasks = () => {
-    if (currentUser.role === 'ORGANIZER') {
+    if (user?.role === 'ORGANIZER') {
       return tasks; // Organizers see all tasks
     } else {
-      return tasks.filter(task => task.assignedToUserId === currentUser.id); // Non-organizers see only their tasks
+      return tasks.filter(task => task.assignedToUserId === user?.id); // Non-organizers see only their tasks
     }
   };
 
   const canUpdateTaskStatus = (task) => {
-    if (currentUser.role === 'ORGANIZER') {
+    if (user?.role === 'ORGANIZER') {
       return false; // Organizers cannot update task status
     } else {
-      return task.assignedToUserId === currentUser.id; // Users can only update their own tasks
+      return task.assignedToUserId === user?.id; // Users can only update their own tasks
     }
   };
 
-  const handleStatusUpdate = (taskId, newStatus) => {
-    if (!canUpdateTaskStatus(tasks.find(t => t.id === taskId))) {
+  const handleStatusUpdate = async (taskId, newStatus) => {
+    const task = tasks.find(t => t.id === taskId);
+    if (!canUpdateTaskStatus(task)) {
       return; // Don't allow status update
     }
     
-    setTasks(tasks.map(task => 
-      task.id === taskId ? { ...task, status: newStatus } : task
-    ));
+    try {
+      await eventAPI.updateTaskStatus(taskId, { status: newStatus });
+      setTasks(tasks.map(t => 
+        t.id === taskId ? { ...t, status: newStatus } : t
+      ));
+    } catch (err) {
+      console.error('Failed to update task status:', err);
+      setError('Failed to update task status. Please try again.');
+    }
   };
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
     try {
       const response = await eventAPI.createTask(id, taskForm);
-      setTasks([...tasks, { ...response, assignedToName: 'New User' }]);
+      setTasks([...tasks, response]);
       setShowCreateTask(false);
       setTaskForm({
         taskName: '',
@@ -95,7 +85,9 @@ const TaskManagement = () => {
         deadline: '',
         assignedToUserId: ''
       });
+      setError('');
     } catch (err) {
+      console.error('Failed to create task:', err);
       setError(err.response?.data?.message || 'Failed to create task');
     }
   };
@@ -171,10 +163,10 @@ const TaskManagement = () => {
                     <strong>Deadline:</strong> {new Date(task.deadline).toLocaleDateString()}
                   </div>
                   <div className="task-assignee">
-                    {currentUser.role === 'ORGANIZER' ? (
-                      <><strong>Assigned to:</strong> {task.assignedToName}</>
+                    {user?.role === 'ORGANIZER' ? (
+                      <><strong>Assigned to:</strong> {task.assignedUserName || 'User ' + task.assignedToUserId}</>
                     ) : (
-                      <><strong>Assigned by:</strong> Task Manager</>
+                      <><strong>Assigned by:</strong> Event Organizer</>
                     )}
                   </div>
                 </div>

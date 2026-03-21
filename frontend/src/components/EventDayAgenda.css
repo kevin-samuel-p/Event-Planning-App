@@ -1,0 +1,455 @@
+/* Event Day Agenda Styles */
+.event-day-agenda {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+/* Session Notifications */
+.session-notification {
+  background: linear-gradient(135deg, #28a745, #20c997);
+  color: white;
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  box-shadow: 0 4px 20px rgba(40, 167, 69, 0.3);
+  animation: slideInDown 0.3s ease;
+}
+
+.notification-content {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.notification-icon {
+  font-size: 1.5rem;
+  animation: pulse 1.5s infinite;
+}
+
+.notification-text {
+  flex: 1;
+}
+
+.notification-text strong {
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.notification-text small {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+.notification-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.3s;
+}
+
+.notification-close:hover {
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.agenda-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #f8f9fa;
+}
+
+.agenda-header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.agenda-summary {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.progress-text {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #28a745;
+}
+
+.session-count {
+  font-size: 0.9rem;
+  color: #6c757d;
+  background: #f8f9fa;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+}
+
+/* Progress Bar Styles with Gradual Filling */
+.agenda-progress {
+  margin-bottom: 2rem;
+}
+
+.progress-container {
+  display: flex;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+}
+
+.progress-segment {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.5s ease;
+  cursor: pointer;
+  border-right: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.progress-segment:last-child {
+  border-right: none;
+}
+
+.progress-segment:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.progress-segment.concurrent {
+  border-top: 3px solid #ffc107;
+}
+
+.segment-label {
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-align: center;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.concurrent-indicator {
+  margin-left: 0.25rem;
+  font-size: 0.9rem;
+}
+
+/* Session List Styles with Dependencies */
+.agenda-sessions {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.agenda-session {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  border-left: 4px solid #6c757d;
+  transition: all 0.3s ease;
+}
+
+.agenda-session.session-completed {
+  border-left-color: #28a745;
+  background: #f0fff4;
+}
+
+.agenda-session.session-in-progress {
+  border-left-color: #007bff;
+  background: #f0f8ff;
+}
+
+.agenda-session.session-failed {
+  border-left-color: #dc3545;
+  background: #fff5f5;
+}
+
+.agenda-session.session-pending {
+  border-left-color: #6c757d;
+  background: #f8f9fa;
+}
+
+.agenda-session.concurrent {
+  border-top: 2px solid #ffc107;
+  position: relative;
+}
+
+.agenda-session.concurrent::before {
+  content: '⚡';
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  background: #ffc107;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-size: 0.7rem;
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.session-time {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.session-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+}
+
+.status-badge.session-completed {
+  background: #28a745;
+  color: white;
+}
+
+.status-badge.session-in-progress {
+  background: #007bff;
+  color: white;
+}
+
+.status-badge.session-failed {
+  background: #dc3545;
+  color: white;
+}
+
+.status-badge.session-pending {
+  background: #6c757d;
+  color: white;
+}
+
+.type-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  background: #e9ecef;
+  color: #495057;
+}
+
+.session-content {
+  margin-bottom: 1rem;
+}
+
+.session-content h4 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.session-description {
+  color: #666;
+  margin: 0 0 1rem 0;
+  line-height: 1.5;
+}
+
+/* Dependencies Styles */
+.session-dependencies {
+  background: #fff3cd;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #ffeaa7;
+  margin-bottom: 1rem;
+}
+
+.session-dependencies strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #856404;
+  font-size: 0.9rem;
+}
+
+.dependency-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.dependency-item {
+  background: #ffc107;
+  color: #333;
+  padding: 0.25rem 0.5rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.session-assignments {
+  background: white;
+  padding: 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.session-assignments strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.assigned-users {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.assigned-user {
+  background: #667eea;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.session-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.btn-complete {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.btn-complete:hover:not(:disabled) {
+  background: #218838;
+}
+
+.btn-complete:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-retry {
+  background: #ffc107;
+  color: #333;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.btn-retry:hover {
+  background: #e0a800;
+  color: white;
+}
+
+/* Loading and Error States */
+.agenda-loading {
+  text-align: center;
+  padding: 2rem;
+  color: #667eea;
+  font-size: 1.1rem;
+}
+
+.agenda-error {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #f5c6cb;
+  margin: 1rem 0;
+}
+
+/* Animations */
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .event-day-agenda {
+    padding: 1rem;
+    margin-top: 1rem;
+  }
+  
+  .agenda-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  
+  .progress-container {
+    flex-direction: column;
+  }
+  
+  .progress-segment {
+    width: 100% !important;
+    height: 30px;
+    margin-bottom: 0.5rem;
+  }
+  
+  .agenda-session {
+    padding: 1rem;
+  }
+  
+  .session-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+  
+  .session-actions {
+    flex-direction: column;
+  }
+  
+  .dependency-list {
+    flex-direction: column;
+  }
+  
+  .assigned-users {
+    flex-direction: column;
+  }
+}

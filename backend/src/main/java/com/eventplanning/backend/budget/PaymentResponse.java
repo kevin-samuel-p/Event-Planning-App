@@ -9,7 +9,8 @@ public record PaymentResponse(
         Long eventVendorId,
         BigDecimal amount,
         LocalDate paymentDate,
-        PaymentStatus paymentStatus
+        PaymentStatus paymentStatus,
+        String recipientName
 ) {
     public static PaymentResponse from(Payment payment) {
         return new PaymentResponse(
@@ -18,7 +19,8 @@ public record PaymentResponse(
                 payment.getEventVendor().getId(),
                 payment.getAmount(),
                 payment.getPaymentDate(),
-                payment.getPaymentStatus()
+                payment.getPaymentStatus(),
+                payment.getRecipientName()
         );
     }
 }

@@ -9,7 +9,8 @@ public record TaskResponse(
         LocalDate deadline,
         TaskStatus status,
         Long eventId,
-        Long assignedToUserId
+        Long assignedToUserId,
+        String assignedUserName
 ) {
     public static TaskResponse from(Task task) {
         return new TaskResponse(
@@ -19,7 +20,8 @@ public record TaskResponse(
                 task.getDeadline(),
                 task.getStatus(),
                 task.getEvent().getId(),
-                task.getAssignedTo().getId()
+                task.getAssignedTo().getId(),
+                task.getAssignedTo().getName()
         );
     }
 }

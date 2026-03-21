@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { eventAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
+import EventDayAgenda from '../components/EventDayAgenda';
 import './EventDetails.css';
 
 const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [event, setEvent] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showManageDropdown, setShowManageDropdown] = useState(false);
   const [dropdownSymbol, setDropdownSymbol] = useState('▶');
+
+  // Check if today is event day
+  const isEventDay = () => {
+    if (!event) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const eventDate = new Date(event.eventDate);
+    eventDate.setHours(0, 0, 0, 0);
+    return today.toDateString() === eventDate.toDateString();
+  };
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -158,6 +171,15 @@ const EventDetails = () => {
           </div>
         </div>
       </div>
+
+      {/* Event Day Agenda - Only shows on event day */}
+      {isEventDay() && (
+        <EventDayAgenda 
+          eventId={id} 
+          isEventDay={isEventDay()} 
+          userRole={user?.role || 'GUEST'} 
+        />
+      )}
     </div>
   );
 };

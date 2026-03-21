@@ -3,6 +3,23 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { eventAPI } from '../services/api';
 import './VendorManagement.css';
 
+// Vendor service mapping for auto-selection
+const VENDOR_SERVICE_MAPPING = {
+  'Catering Excellence': 'Catering',
+  'Bloom Florists': 'Florist',
+  'Snap Photography': 'Photography',
+  'DJ Beats Entertainment': 'Entertainment',
+  'Elite Transportation': 'Transportation',
+  'Gourmet Catering Co': 'Catering',
+  'Decor Plus': 'Decoration',
+  'Sound Systems Pro': 'Entertainment'
+};
+
+// Helper function to get default service type for vendor
+const getDefaultServiceType = (vendorName) => {
+  return VENDOR_SERVICE_MAPPING[vendorName] || '';
+};
+
 const VendorManagement = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -10,41 +27,42 @@ const VendorManagement = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showAddVendor, setShowAddVendor] = useState(false);
-
+  const [editingVendor, setEditingVendor] = useState(null);
   const [vendorForm, setVendorForm] = useState({
     vendorName: '',
     serviceType: '',
-    contractStatus: 'PENDING'
+    contractStatus: 'PROPOSED'
   });
+  const [allVendors, setAllVendors] = useState([]);
   const [vendorSuggestions, setVendorSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     fetchVendors();
+    fetchAllVendors();
   }, [id]);
+
+  const fetchAllVendors = async () => {
+    try {
+      const vendorsData = await eventAPI.getAllVendors();
+      setAllVendors(vendorsData || []);
+    } catch (err) {
+      console.error('Failed to fetch all vendors:', err);
+    }
+  };
 
   const fetchVendors = async () => {
     try {
-      // For now, we'll simulate vendor data
-      // In a real app, you'd call the API to get vendors
-      setVendors([
-        {
-          id: 1,
-          vendorId: 5,
-          vendorName: 'Catering Co.',
-          serviceType: 'Catering',
-          contractStatus: 'ACTIVE'
-        },
-        {
-          id: 2,
-          vendorId: 6,
-          vendorName: 'Flower Shop',
-          serviceType: 'Decorations',
-          contractStatus: 'PENDING'
-        }
-      ]);
+      setLoading(true);
+      setError('');
+      
+      // Fetch real vendor data from API
+      const vendorsData = await eventAPI.getEventVendors(id);
+      setVendors(vendorsData || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch vendors');
+      console.error('Failed to fetch vendors:', err);
+      setError('Failed to load vendors. Please try again.');
+      setVendors([]);
     } finally {
       setLoading(false);
     }
@@ -55,9 +73,9 @@ const VendorManagement = () => {
     setVendorForm({...vendorForm, vendorName: value});
     
     if (value.length > 0) {
-      // Filter existing vendors based on name
-      const filtered = vendors.filter(vendor => 
-        vendor.vendorName.toLowerCase().includes(value.toLowerCase())
+      // Filter from all available vendors, not just event vendors
+      const filtered = allVendors.filter(vendor => 
+        vendor.name.toLowerCase().includes(value.toLowerCase())
       ).slice(0, 4); // Limit to 4 suggestions
       setVendorSuggestions(filtered);
       setShowSuggestions(true);
@@ -69,37 +87,124 @@ const VendorManagement = () => {
 
   const handleVendorSelect = (vendor) => {
     setVendorForm({
-      ...vendorForm,
-      vendorName: vendor.vendorName,
-      serviceType: vendor.serviceType
+      vendorName: vendor.name,
+      serviceType: getDefaultServiceType(vendor.name), // Auto-select service type
+      contractStatus: 'PROPOSED'
     });
+    setVendorSuggestions([]);
     setShowSuggestions(false);
+  };
+
+  const handleEditVendor = (vendor) => {
+    setEditingVendor(vendor);
+    setVendorForm({
+      vendorName: vendor.vendorName,
+      serviceType: vendor.serviceType || getDefaultServiceType(vendor.vendorName),
+      contractStatus: vendor.contractStatus
+    });
+    setShowAddVendor(true);
+  };
+
+  const handleContactVendor = (vendor) => {
+    // Navigate to vendor contact page with vendor details
+    navigate(`/vendor-contact/${vendor.vendorId}`, { 
+      state: { 
+        vendorName: vendor.vendorName,
+        vendorId: vendor.vendorId,
+        serviceType: vendor.serviceType,
+        email: vendor.email || '',
+        eventId: id  // Add the current event ID
+      }
+    });
   };
 
   const handleAddVendor = async (e) => {
     e.preventDefault();
     try {
-      const response = await eventAPI.addVendor(id, vendorForm);
-      setVendors([...vendors, { 
-        ...response, 
-        vendorName: vendorForm.vendorName 
-      }]);
-      setShowAddVendor(false);
-      setVendorForm({
-        vendorName: '',
-        serviceType: '',
-        contractStatus: 'PENDING'
-      });
+      if (editingVendor) {
+        // Update existing vendor
+        console.log('Editing vendor:', editingVendor); // Debug log
+        console.log('Vendor form:', vendorForm); // Debug log
+        
+        // Use the vendor ID from the editingVendor object directly
+        const response = await eventAPI.updateVendor(editingVendor.id, {
+          serviceType: vendorForm.serviceType,
+          contractStatus: vendorForm.contractStatus
+        });
+        
+        console.log('Update request:', {
+          vendorId: editingVendor.id,
+          serviceType: vendorForm.serviceType,
+          contractStatus: vendorForm.contractStatus
+        }); // Debug log
+        setVendors(vendors.map(v => 
+          v.id === editingVendor.id ? { ...response, vendorName: vendorForm.vendorName } : v
+        ));
+        setEditingVendor(null);
+        setShowAddVendor(false);
+        setVendorForm({
+          vendorName: '',
+          serviceType: '',
+          contractStatus: 'PROPOSED'
+        });
+      } else {
+        // Add new vendor
+        const selectedVendor = allVendors.find(v => v.name === vendorForm.vendorName);
+        
+        if (!selectedVendor) {
+          setError('Please select a valid vendor from suggestions or enter an existing vendor name');
+          return;
+        }
+
+        const response = await eventAPI.addVendor(id, {
+          vendorId: selectedVendor.id,
+          serviceType: vendorForm.serviceType,
+          contractStatus: vendorForm.contractStatus
+        });
+        
+        setVendors([...vendors, { ...response, vendorName: vendorForm.vendorName }]);
+        setShowAddVendor(false);
+        setVendorForm({
+          vendorName: '',
+          serviceType: '',
+          contractStatus: 'PROPOSED'
+        });
+        setError('');
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add vendor');
+      console.error('Failed to save vendor:', err);
+      setError(err.response?.data?.message || err.message || 'Failed to save vendor');
+    }
+  };
+
+  const handleRemoveVendor = async () => {
+    if (!editingVendor) return;
+    
+    if (window.confirm('Are you sure you want to remove this vendor from the event?')) {
+      try {
+        await eventAPI.removeVendor(editingVendor.id);
+        setVendors(vendors.filter(v => v.id !== editingVendor.id));
+        setEditingVendor(null);
+        setShowAddVendor(false);
+        setVendorForm({
+          vendorName: '',
+          serviceType: '',
+          contractStatus: 'PROPOSED'
+        });
+        setError('');
+      } catch (err) {
+        console.error('Failed to remove vendor:', err);
+        setError(err.response?.data?.message || err.message || 'Failed to remove vendor');
+      }
     }
   };
 
   const getContractStatusColor = (status) => {
     switch (status) {
-      case 'PENDING': return '#ffc107';
+      case 'PROPOSED': return '#ffc107';
       case 'ACTIVE': return '#28a745';
       case 'COMPLETED': return '#6c757d';
+      case 'CANCELLED': return '#dc3545';
       default: return '#6c757d';
     }
   };
@@ -158,8 +263,8 @@ const VendorManagement = () => {
                 </div>
 
                 <div className="vendor-actions">
-                  <button className="btn-secondary">View Details</button>
-                  <button className="btn-secondary">Contact</button>
+                  <button className="btn-secondary" onClick={() => handleEditVendor(vendor)}>Edit Details</button>
+                  <button className="btn-secondary" onClick={() => handleContactVendor(vendor)}>Contact</button>
                 </div>
               </div>
             ))}
@@ -170,7 +275,7 @@ const VendorManagement = () => {
       {showAddVendor && (
         <div className="modal-overlay">
           <div className="modal">
-            <h3>Add Vendor</h3>
+            <h3>{editingVendor ? 'Edit Vendor' : 'Add Vendor'}</h3>
             <form onSubmit={handleAddVendor}>
               <div className="form-group">
                 <label>Vendor Name:</label>
@@ -191,8 +296,8 @@ const VendorManagement = () => {
                           className="suggestion-item"
                           onClick={() => handleVendorSelect(vendor)}
                         >
-                          <div className="suggestion-name">{vendor.vendorName}</div>
-                          <div className="suggestion-type">{vendor.serviceType}</div>
+                          <div className="suggestion-name">{vendor.name}</div>
+                          <div className="suggestion-email">{vendor.email}</div>
                         </div>
                       ))}
                     </div>
@@ -222,13 +327,21 @@ const VendorManagement = () => {
                   value={vendorForm.contractStatus}
                   onChange={(e) => setVendorForm({...vendorForm, contractStatus: e.target.value})}
                 >
-                  <option value="PENDING">Pending</option>
+                  <option value="PROPOSED">Proposed</option>
                   <option value="ACTIVE">Active</option>
                   <option value="COMPLETED">Completed</option>
+                  <option value="CANCELLED">Cancelled</option>
                 </select>
               </div>
               <div className="form-actions">
-                <button type="submit" className="btn-primary">Add Vendor</button>
+                <button type="submit" className="btn-primary">
+                  {editingVendor ? 'Update Vendor' : 'Add Vendor'}
+                </button>
+                {editingVendor && (
+                  <button type="button" className="btn-danger" onClick={handleRemoveVendor}>
+                    Remove Vendor
+                  </button>
+                )}
                 <button type="button" className="btn-secondary" onClick={() => setShowAddVendor(false)}>
                   Cancel
                 </button>

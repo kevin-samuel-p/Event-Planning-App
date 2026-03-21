@@ -50,4 +50,7 @@ public class Payment {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private PaymentStatus paymentStatus;
+
+    @Column(nullable = false)
+    private String recipientName;
 }

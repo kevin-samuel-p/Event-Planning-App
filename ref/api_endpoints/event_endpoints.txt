@@ -16,6 +16,42 @@ Desc: List events for current user
 Sample-Request: NULL
 Sample-Response: [{"id":101,"eventName":"Spring Gala","eventDate":"2026-04-15","venue":"Grand Hall","eventType":"Conference","organizerId":1}]
 
+HTTP GET
+URL: http://localhost:8080/api/tasks/delegated
+Input-Type: None
+Input: NULL
+Response: List<TaskResponse> { id (long), taskName (string), description (string), deadline (LocalDate), status (TaskStatus), eventId (long), assignedToUserId (long) }
+Desc: Get tasks delegated by current organizer
+Sample-Request: NULL
+Sample-Response: [{"id":401,"taskName":"Setup Venue","description":"Arrange tables and chairs","deadline":"2026-04-14","status":"TODO","eventId":101,"assignedToUserId":3}]
+
+HTTP GET
+URL: http://localhost:8080/api/tasks/assigned
+Input-Type: None
+Input: NULL
+Response: List<TaskResponse> { id (long), taskName (string), description (string), deadline (LocalDate), status (TaskStatus), eventId (long), assignedToUserId (long) }
+Desc: Get tasks assigned to current user (team member or vendor)
+Sample-Request: NULL
+Sample-Response: [{"id":401,"taskName":"Setup Venue","description":"Arrange tables and chairs","deadline":"2026-04-14","status":"TODO","eventId":101,"assignedToUserId":3}]
+
+HTTP GET
+URL: http://localhost:8080/api/events/vendor
+Input-Type: None
+Input: NULL
+Response: List<EventResponse> { id (long), eventName (string), eventDate (LocalDate), venue (string), eventType (string), organizerId (long) }
+Desc: Get events where current vendor is assigned
+Sample-Request: NULL
+Sample-Response: [{"id":101,"eventName":"Spring Gala","eventDate":"2026-04-15","venue":"Grand Hall","eventType":"Conference","organizerId":1}]
+
+HTTP GET
+URL: http://localhost:8080/api/events/team
+Input-Type: None
+Input: NULL
+Response: List<EventResponse> { id (long), eventName (string), eventDate (LocalDate), venue (string), eventType (string), organizerId (long) }
+Desc: Get events where current team member is assigned tasks
+Sample-Request: NULL
+Sample-Response: [{"id":101,"eventName":"Spring Gala","eventDate":"2026-04-15","venue":"Grand Hall","eventType":"Conference","organizerId":1}]
+
 HTTP POST
 URL: http://localhost:8080/api/events/{eventId}/budget
 Input-Type: Mixed
@@ -25,14 +61,41 @@ Desc: Create a budget for an event
 Sample-Request: {"totalBudget":5000.00}
 Sample-Response: {"id":201,"eventId":101,"totalBudget":5000.00,"spentAmount":0.00}
 
+HTTP GET
+URL: http://localhost:8080/api/events/{eventId}/budget
+Input-Type: PathParam
+Input: eventId (long)
+Response: BudgetResponse { id (long), eventId (long), totalBudget (BigDecimal), spentAmount (BigDecimal) }
+Desc: Get budget for an event
+Sample-Request: NULL
+Sample-Response: {"id":201,"eventId":101,"totalBudget":5000.00,"spentAmount":1200.50}
+
+HTTP GET
+URL: http://localhost:8080/api/budgets/{budgetId}/payments
+Input-Type: PathParam
+Input: budgetId (long)
+Response: List<PaymentResponse> { id (long), budgetId (long), eventVendorId (long), amount (BigDecimal), paymentDate (LocalDate), paymentStatus (PaymentStatus) }
+Desc: Get all payments for a budget
+Sample-Request: NULL
+Sample-Response: [{"id":601,"budgetId":201,"eventVendorId":301,"amount":1500.00,"paymentDate":"2026-03-11","paymentStatus":"PAID"}]
+
 HTTP POST
 URL: http://localhost:8080/api/events/{eventId}/vendors
 Input-Type: Mixed
-Input: eventId (PathVariable), vendorId (long), serviceType (string), contractStatus (ContractStatus: PENDING|ACTIVE|COMPLETED)
+Input: eventId (PathVariable), vendorId (long), serviceType (string), contractStatus (ContractStatus: PROPOSED|ACTIVE|COMPLETED|CANCELLED)
 Response: EventVendorResponse { id (long), eventId (long), vendorId (long), serviceType (string), contractStatus (ContractStatus) }
 Desc: Add a vendor to an event
-Sample-Request: {"vendorId":5,"serviceType":"Catering","contractStatus":"PENDING"}
-Sample-Response: {"id":301,"eventId":101,"vendorId":5,"serviceType":"Catering","contractStatus":"PENDING"}
+Sample-Request: {"vendorId":5,"serviceType":"Catering","contractStatus":"PROPOSED"}
+Sample-Response: {"id":301,"eventId":101,"vendorId":5,"serviceType":"Catering","contractStatus":"PROPOSED"}
+
+HTTP GET
+URL: http://localhost:8080/api/events/{eventId}/vendors
+Input-Type: PathParam
+Input: eventId (long)
+Response: List<EventVendorResponse> { id (long), eventId (long), vendorId (long), serviceType (string), contractStatus (ContractStatus) }
+Desc: Get all vendors for an event
+Sample-Request: NULL
+Sample-Response: [{"id":301,"eventId":101,"vendorId":5,"serviceType":"Catering","contractStatus":"PROPOSED"}]
 
 HTTP POST
 URL: http://localhost:8080/api/events/{eventId}/tasks
@@ -73,12 +136,11 @@ Sample-Response: {"id":501,"eventId":101,"guestId":7,"rsvpStatus":"ACCEPTED","in
 HTTP POST
 URL: http://localhost:8080/api/budgets/{budgetId}/payments
 Input-Type: Mixed
-Input: budgetId (PathVariable), eventVendorId (long), amount (BigDecimal), paymentDate (LocalDate), paymentStatus (PaymentStatus: PENDING|PAID|CANCELLED)
-Response: PaymentResponse { id (long), budgetId (long), eventVendorId (long), amount (BigDecimal), paymentDate (LocalDate), paymentStatus (PaymentStatus) }
-Desc: Add a payment to a budget with budget validation
-Sample-Request: {"eventVendorId":301,"amount":1500.00,"paymentDate":"2026-03-11","paymentStatus":"PAID"}
-Sample-Response: {"id":601,"budgetId":201,"eventVendorId":301,"amount":1500.00,"paymentDate":"2026-03-11","paymentStatus":"PAID"}
-
+Input: budgetId (PathVariable), eventVendorId (long), amount (BigDecimal), paymentDate (LocalDate, YYYY-MM-DD), paymentStatus (PaymentStatus: PENDING|PAID|FAILED), recipientName (string)
+Response: PaymentResponse { id (long), budgetId (long), eventVendorId (long), amount (BigDecimal), paymentDate (LocalDate), paymentStatus (PaymentStatus), recipientName (string) }
+Desc: Add a payment entry to a budget with recipient tracking
+Sample-Request: {"eventVendorId":3001,"amount":2500.00,"paymentDate":"2026-03-20","paymentStatus":"PAID","recipientName":"ABC Catering Service"}
+Sample-Response: {"id":9001,"budgetId":501,"eventVendorId":3001,"amount":2500.00,"paymentDate":"2026-03-20","paymentStatus":"PAID","recipientName":"ABC Catering Service"}
 
 HTTP GET
 URL: http://localhost:8080/api/notifications/me

@@ -39,6 +39,8 @@ import com.eventplanning.backend.vendor.CreateEventVendorRequest;
 import com.eventplanning.backend.vendor.EventVendor;
 import com.eventplanning.backend.vendor.EventVendorRepository;
 import com.eventplanning.backend.vendor.EventVendorResponse;
+import com.eventplanning.backend.vendor.UpdateEventVendorRequest;
+import com.eventplanning.backend.vendor.VendorResponse;
 import jakarta.transaction.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -124,6 +126,44 @@ public class EventWorkflowService {
         return eventRepository.findByOrganizerId(organizer.getId()).stream().map(EventResponse::from).toList();
     }
 
+    public List<TaskResponse> getDelegatedTasks() {
+        User organizer = currentUserProvider.requireCurrentUser();
+        requireRole(organizer, Role.ORGANIZER);
+        return taskRepository.findByEventOrganizerId(organizer.getId()).stream().map(TaskResponse::from).toList();
+    }
+
+    public List<TaskResponse> getAssignedTasks() {
+        User user = currentUserProvider.requireCurrentUser();
+        if (user.getRole() != Role.TEAM_MEMBER && user.getRole() != Role.VENDOR) {
+            throw new AccessDeniedException("Only team members and vendors can view assigned tasks");
+        }
+        return taskRepository.findByAssignedToId(user.getId()).stream().map(TaskResponse::from).toList();
+    }
+
+    public List<TaskResponse> getEventTasks(Long eventId) {
+        Event event = getOwnedEvent(eventId);
+        return taskRepository.findByEventId(eventId).stream().map(TaskResponse::from).toList();
+    }
+
+    public List<EventResponse> getVendorEvents() {
+        User vendor = currentUserProvider.requireCurrentUser();
+        requireRole(vendor, Role.VENDOR);
+        return eventVendorRepository.findByVendorId(vendor.getId()).stream()
+                .map(EventVendor::getEvent)
+                .map(EventResponse::from)
+                .toList();
+    }
+
+    public List<EventResponse> getTeamEvents() {
+        User teamMember = currentUserProvider.requireCurrentUser();
+        requireRole(teamMember, Role.TEAM_MEMBER);
+        return taskRepository.findByAssignedToId(teamMember.getId()).stream()
+                .map(Task::getEvent)
+                .distinct()
+                .map(EventResponse::from)
+                .toList();
+    }
+
     public BudgetResponse createBudget(Long eventId, CreateBudgetRequest request) {
         Event event = getOwnedEvent(eventId);
         budgetRepository.findByEventId(eventId).ifPresent(existing -> {
@@ -138,6 +178,20 @@ public class EventWorkflowService {
 
         notifyUser(event.getOrganizer(), event, "Budget initialized for event " + event.getEventName());
         return BudgetResponse.from(budget);
+    }
+
+    public BudgetResponse getBudget(Long eventId) {
+        Event event = getOwnedEvent(eventId);
+        Budget budget = budgetRepository.findByEventId(eventId)
+                .orElseThrow(() -> new NotFoundException("Budget not found for event"));
+        return BudgetResponse.from(budget);
+    }
+
+    public List<PaymentResponse> getPayments(Long budgetId) {
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new NotFoundException("Budget not found"));
+        getOwnedEvent(budget.getEvent().getId()); // Verify ownership
+        return paymentRepository.findByBudgetId(budgetId).stream().map(PaymentResponse::from).toList();
     }
 
     public EventVendorResponse addVendor(Long eventId, CreateEventVendorRequest request) {
@@ -157,6 +211,59 @@ public class EventWorkflowService {
 
         notifyUser(vendor, event, "You have been added to event " + event.getEventName());
         return EventVendorResponse.from(eventVendor);
+    }
+
+    public void removeVendor(Long vendorId) {
+        EventVendor eventVendor = eventVendorRepository.findById(vendorId)
+                .orElseThrow(() -> new NotFoundException("Event vendor not found"));
+        
+        // Verify the event belongs to the current user
+        getOwnedEvent(eventVendor.getEvent().getId());
+        
+        eventVendorRepository.delete(eventVendor);
+    }
+
+    public EventVendorResponse updateVendor(Long vendorId, UpdateEventVendorRequest request) {
+        EventVendor eventVendor = eventVendorRepository.findById(vendorId)
+                .orElseThrow(() -> new NotFoundException("Event vendor not found"));
+        
+        // Verify the event belongs to the current user
+        getOwnedEvent(eventVendor.getEvent().getId());
+        
+        // Update vendor details
+        eventVendor.setServiceType(request.serviceType());
+        eventVendor.setContractStatus(request.contractStatus());
+        
+        EventVendor updated = eventVendorRepository.save(eventVendor);
+        return EventVendorResponse.from(updated);
+    }
+
+    public List<EventVendorResponse> getEventVendors(Long eventId) {
+        Event event = getOwnedEvent(eventId);
+        return eventVendorRepository.findByEventId(eventId).stream()
+                .map(eventVendor -> new EventVendorResponse(
+                        eventVendor.getId(),
+                        eventVendor.getEvent().getId(),
+                        eventVendor.getVendor().getId(),
+                        eventVendor.getVendor().getName(),
+                        eventVendor.getVendor().getEmail(),
+                        eventVendor.getVendor().getPhone(),
+                        eventVendor.getServiceType(),
+                        eventVendor.getContractStatus()
+                ))
+                .toList();
+    }
+
+    public List<VendorResponse> getAllVendors() {
+        return userRepository.findByRole(Role.VENDOR).stream()
+                .map(VendorResponse::from)
+                .toList();
+    }
+
+    public VendorResponse getVendorDetails(Long vendorId) {
+        User vendor = userRepository.findById(vendorId)
+                .orElseThrow(() -> new NotFoundException("Vendor not found"));
+        return VendorResponse.from(vendor);
     }
 
     public TaskResponse addTask(Long eventId, CreateTaskRequest request) {
@@ -232,6 +339,7 @@ public class EventWorkflowService {
         Invitation updated = invitationRepository.save(invitation);
         notifyUser(updated.getEvent().getOrganizer(), updated.getEvent(),
                 "RSVP updated by " + guest.getName() + " to " + updated.getRsvpStatus());
+        notifyUser(guest, updated.getEvent(), "You have updated your RSVP to " + updated.getRsvpStatus());
         return InvitationResponse.from(updated);
     }
 
@@ -244,8 +352,14 @@ public class EventWorkflowService {
             throw new AccessDeniedException("Only event organizer can add payments");
         }
 
-        EventVendor eventVendor = eventVendorRepository.findById(request.eventVendorId())
-                .orElseThrow(() -> new NotFoundException("Event vendor not found"));
+        EventVendor eventVendor;
+        try {
+            eventVendor = eventVendorRepository.findById(request.eventVendorId())
+                    .orElseThrow(() -> new NotFoundException("Event vendor not found with ID: " + request.eventVendorId()));
+        } catch (NotFoundException e) {
+            // For testing purposes, create a dummy vendor if none exists
+            throw new BadRequestException("Event vendor not found. Please add a vendor to the event first. Vendor ID: " + request.eventVendorId());
+        }
         
         // Verify the event vendor belongs to the same event as the budget
         if (!eventVendor.getEvent().getId().equals(budget.getEvent().getId())) {
@@ -268,6 +382,7 @@ public class EventWorkflowService {
                 .amount(request.amount())
                 .paymentDate(request.paymentDate())
                 .paymentStatus(request.paymentStatus())
+                .recipientName(request.recipientName())
                 .build());
 
         // Update budget spent amount only for paid payments

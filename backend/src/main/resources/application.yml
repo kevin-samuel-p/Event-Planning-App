@@ -9,6 +9,9 @@ spring:
       ddl-auto: update
     show-sql: false
     database-platform: org.hibernate.dialect.MySQLDialect
+  web:
+    resources:
+      add-mappings: false
 
 server:
   port: ${SERVER_PORT:8080}

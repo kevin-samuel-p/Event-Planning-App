@@ -95,8 +95,43 @@ export const eventAPI = {
     return response.data;
   },
 
+  getBudget: async (eventId) => {
+    const response = await api.get(`/events/${eventId}/budget`);
+    return response.data;
+  },
+
+  getPayments: async (budgetId) => {
+    const response = await api.get(`/budgets/${budgetId}/payments`);
+    return response.data;
+  },
+
   addVendor: async (eventId, vendorData) => {
     const response = await api.post(`/events/${eventId}/vendors`, vendorData);
+    return response.data;
+  },
+
+  getEventVendors: async (eventId) => {
+    const response = await api.get(`/events/${eventId}/vendors`);
+    return response.data;
+  },
+
+  getAllVendors: async () => {
+    const response = await api.get('/vendor-directory');
+    return response.data;
+  },
+
+  updateVendor: async (vendorId, vendorData) => {
+    const response = await api.put(`/events/vendors/${vendorId}`, vendorData);
+    return response.data;
+  },
+
+  getVendorDetails: async (vendorId) => {
+    const response = await api.get(`/vendors/${vendorId}`);
+    return response.data;
+  },
+
+  removeVendor: async (vendorId) => {
+    const response = await api.delete(`/events/vendors/${vendorId}`);
     return response.data;
   },
 
@@ -112,6 +147,27 @@ export const eventAPI = {
 
   updateTaskStatus: async (taskId, statusData) => {
     const response = await api.patch(`/tasks/${taskId}/status`, statusData);
+    return response.data;
+  },
+
+  // Missing functions - add them based on API endpoints
+  getDelegatedTasks: async () => {
+    const response = await api.get('/tasks/delegated');
+    return response.data;
+  },
+
+  getAssignedTasks: async () => {
+    const response = await api.get('/tasks/assigned');
+    return response.data;
+  },
+
+  getVendorEvents: async () => {
+    const response = await api.get('/events/vendor');
+    return response.data;
+  },
+
+  getTeamEvents: async () => {
+    const response = await api.get('/events/team');
     return response.data;
   },
 

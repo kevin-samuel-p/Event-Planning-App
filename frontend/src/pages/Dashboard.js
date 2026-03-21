@@ -18,15 +18,121 @@ const Dashboard = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEvent, setEditingEvent] = useState(null);
 
+  // New state for enhanced features
+  const [tasks, setTasks] = useState([]);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
+  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [expandedTasks, setExpandedTasks] = useState(true);
+  const [showDMPanel, setShowDMPanel] = useState(false);
+  const [isEventDay, setIsEventDay] = useState(false);
+  const [eventDayNotification, setEventDayNotification] = useState(null);
+
   // Determine user role for dashboard customization
   const getUserRole = () => {
     if (!user) return 'GUEST';
     if (user.role === 'ORGANIZER') return 'ORGANIZER';
     if (user.role === 'VENDOR') return 'VENDOR';
-    return 'ATTENDEE'; // Default for regular users
+    if (user.role === 'TEAM_MEMBER') return 'TEAM_MEMBER';
+    return 'GUEST'; // Default for regular users
   };
 
   const userRole = getUserRole();
+
+  // Helper functions for enhanced features
+  const getTaskPriority = (deadline) => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const taskDate = new Date(deadline);
+    taskDate.setHours(0, 0, 0, 0);
+    
+    const diffTime = taskDate - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return 'overdue'; // Red
+    if (diffDays === 0) return 'today'; // Yellow
+    if (diffDays <= 7) return 'this-week'; // Green
+    return 'future'; // Gray
+  };
+
+  const getTaskPriorityClass = (deadline) => {
+    const priority = getTaskPriority(deadline);
+    switch (priority) {
+      case 'overdue': return 'task-overdue';
+      case 'today': return 'task-today';
+      case 'this-week': return 'task-week';
+      case 'future': return 'task-future';
+      default: return 'task-future';
+    }
+  };
+
+  const checkEventDay = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // Check if any event is today
+    const todayEvent = events.find(event => {
+      const eventDate = new Date(event.eventDate);
+      eventDate.setHours(0, 0, 0, 0);
+      return today.toDateString() === eventDate.toDateString();
+    });
+    
+    if (todayEvent) {
+      if (!isEventDay) {
+        setIsEventDay(true);
+        setEventDayNotification({
+          type: 'EVENT_STARTED',
+          message: `Event "${todayEvent.eventName}" has started!`,
+          eventId: todayEvent.id,
+          timestamp: new Date()
+        });
+        
+        // Clear notification after 5 seconds
+        setTimeout(() => setEventDayNotification(null), 5000);
+      }
+    } else {
+      setIsEventDay(false);
+    }
+  };
+
+  const getTimelineData = () => {
+    if (events.length === 0) return [];
+    
+    const allDates = [];
+    events.forEach(event => {
+      allDates.push({
+        date: new Date(event.eventDate),
+        type: 'event',
+        title: event.eventName,
+        id: event.id
+      });
+    });
+    
+    tasks.forEach(task => {
+      allDates.push({
+        date: new Date(task.deadline),
+        type: 'task',
+        title: task.taskName,
+        id: task.id
+      });
+    });
+    
+    return allDates.sort((a, b) => a.date - b.date);
+  };
+
+  const handleMarkTaskDone = async (taskId) => {
+    try {
+      await eventAPI.updateTaskStatus(taskId, 'COMPLETED');
+      setTasks(tasks.map(task => 
+        task.id === taskId ? { ...task, status: 'COMPLETED' } : task
+      ));
+    } catch (err) {
+      console.error('Failed to mark task as done:', err);
+    }
+  };
+
+  const toggleTaskExpansion = () => {
+    setExpandedTasks(!expandedTasks);
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -41,8 +147,8 @@ const Dashboard = () => {
           case 'VENDOR':
             eventsData = await eventAPI.getVendorEvents(); // Events where vendor is hired
             break;
-          case 'ATTENDEE':
-            eventsData = await eventAPI.getInvitedEvents(); // Events user is invited to
+          case 'TEAM_MEMBER':
+            eventsData = await eventAPI.getTeamEvents(); // Events team member is assigned to
             break;
           case 'GUEST':
           default:
@@ -58,8 +164,47 @@ const Dashboard = () => {
       }
     };
 
+    const fetchTasks = async () => {
+      try {
+        let tasksData;
+        
+        // Fetch tasks based on user role
+        switch (userRole) {
+          case 'ORGANIZER':
+            tasksData = await eventAPI.getDelegatedTasks(); // All tasks delegated by organizer
+            break;
+          case 'VENDOR':
+            tasksData = await eventAPI.getAssignedTasks(); // Tasks assigned to vendor
+            break;
+          case 'TEAM_MEMBER':
+            tasksData = await eventAPI.getAssignedTasks(); // Tasks assigned to team member
+            break;
+          case 'GUEST':
+          default:
+            tasksData = []; // Guests have no tasks
+            break;
+        }
+        
+        setTasks(tasksData || []);
+      } catch (err) {
+        console.error('Failed to fetch tasks:', err);
+      }
+    };
+
     fetchEvents();
+    if (userRole !== 'GUEST') {
+      fetchTasks();
+    }
   }, [userRole]);
+
+  // Check for event day every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      checkEventDay();
+    }, 60000); // Check every minute
+
+    return () => clearInterval(interval);
+  }, [events]);
 
   const handleLogout = () => {
     logout();
@@ -104,18 +249,37 @@ const Dashboard = () => {
   return (
     <div className="dashboard">
       <header className="dashboard-header">
+        {/* Event Day Notification */}
+        {eventDayNotification && (
+          <div className="event-day-notification">
+            <div className="notification-content">
+              <span className="notification-icon">🎉</span>
+              <div className="notification-text">
+                <strong>{eventDayNotification.message}</strong>
+                <small>{new Date(eventDayNotification.timestamp).toLocaleTimeString()}</small>
+              </div>
+              <button 
+                className="notification-close"
+                onClick={() => setEventDayNotification(null)}
+              >
+                ×
+              </button>
+            </div>
+          </div>
+        )}
+        
         <div className="header-content">
           <div className="user-info">
             <h2>
               {userRole === 'ORGANIZER' && 'Welcome, Event Organizer!'}
               {userRole === 'VENDOR' && 'Welcome, Vendor Partner!'}
-              {userRole === 'ATTENDEE' && 'Welcome, Event Attendee!'}
+              {userRole === 'TEAM_MEMBER' && 'Welcome, Team Member!'}
               {userRole === 'GUEST' && 'Welcome to Event Planner!'}
             </h2>
             <p className="user-role">
               {userRole === 'ORGANIZER' && 'Event Organizer'}
               {userRole === 'VENDOR' && 'Vendor Partner'}
-              {userRole === 'ATTENDEE' && 'Event Attendee'}
+              {userRole === 'TEAM_MEMBER' && 'Team Member'}
               {userRole === 'GUEST' && 'Guest User'}
             </p>
             {user && user.email && (
@@ -175,28 +339,28 @@ const Dashboard = () => {
               </>
             )}
             
-            {userRole === 'ATTENDEE' && (
+            {userRole === 'TEAM_MEMBER' && (
               <>
                 <button 
                   className="header-btn" 
-                  onClick={() => navigate('/my-events')}
-                  title="My Events"
+                  onClick={() => navigate('/my-tasks')}
+                  title="My Tasks"
+                >
+                  �
+                </button>
+                <button 
+                  className="header-btn" 
+                  onClick={() => navigate('/team-events')}
+                  title="Team Events"
                 >
                   📅
                 </button>
                 <button 
                   className="header-btn" 
-                  onClick={handleViewInvitations}
-                  title="My Invitations"
+                  onClick={() => navigate('/team-chat')}
+                  title="Team Chat"
                 >
-                  ✉
-                </button>
-                <button 
-                  className="header-btn" 
-                  onClick={() => navigate('/my-profile')}
-                  title="My Profile"
-                >
-                  👤
+                  �
                 </button>
               </>
             )}
@@ -235,156 +399,269 @@ const Dashboard = () => {
       </header>
 
       <main className="dashboard-main">
-        {/* Role-specific dashboard content */}
-        {userRole === 'ORGANIZER' && (
-          <div className="dashboard-section">
-            <h3>Your Events</h3>
-            {events.length === 0 ? (
-              <div className="no-events">
-                <p>No events created yet. Create your first event!</p>
-                <button className="btn-primary" onClick={handleCreateEvent}>
-                  Create Event
+        <div className="dashboard-content">
+          {/* Timeline Component */}
+          {userRole !== 'GUEST' && events.length > 0 && (
+            <div className="timeline-container">
+              <div className="timeline-header">
+                <h4>Event Timeline</h4>
+                <button 
+                  className="calendar-toggle-btn"
+                  onClick={() => setShowCalendarModal(true)}
+                  title="Open Calendar"
+                >
+                  📅
                 </button>
               </div>
-            ) : (
-              <div className="events-grid">
-                {events.map(event => (
-                  <div key={event.id} className="event-card">
-                    <h4>{event.eventName}</h4>
-                    <p><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
-                    <p><strong>Venue:</strong> {event.venue}</p>
-                    <p><strong>Type:</strong> {event.eventType}</p>
-                    <div className="event-actions">
-                      <button 
-                        className="btn-primary" 
-                        onClick={() => handleViewEvent(event)}
+              <div className="timeline">
+                <div className="timeline-line"></div>
+                <div className="timeline-content">
+                  {getTimelineData().map((item, index) => {
+                    const position = (index / (getTimelineData().length - 1)) * 100;
+                    const isToday = item.date.toDateString() === new Date().toDateString();
+                    const isEventDay = item.type === 'event' && position >= 75 && position <= 80;
+                    
+                    return (
+                      <div
+                        key={item.id}
+                        className={`timeline-point ${item.type} ${isToday ? 'today' : ''} ${isEventDay ? 'event-day' : ''}`}
+                        style={{ left: `${position}%` }}
+                        title={`${item.title} - ${item.date.toLocaleDateString()}`}
                       >
-                        View Details
-                      </button>
-                      <button 
-                        className="btn-secondary" 
-                        onClick={() => handleEditEvent(event)}
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {userRole === 'VENDOR' && (
-          <div className="dashboard-section">
-            <h3>Your Event Contracts</h3>
-            {events.length === 0 ? (
-              <div className="no-events">
-                <p>No event contracts yet. Browse available opportunities!</p>
-                <button className="btn-primary" onClick={() => navigate('/vendor-opportunities')}>
-                  Browse Opportunities
-                </button>
-              </div>
-            ) : (
-              <div className="events-grid">
-                {events.map(event => (
-                  <div key={event.id} className="event-card">
-                    <h4>{event.eventName}</h4>
-                    <p><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
-                    <p><strong>Service:</strong> {event.serviceType}</p>
-                    <p><strong>Status:</strong> 
-                      <span className={`contract-status ${event.contractStatus?.toLowerCase()}`}>
-                        {event.contractStatus}
-                      </span>
-                    </p>
-                    <div className="event-actions">
-                      <button 
-                        className="btn-primary" 
-                        onClick={() => navigate(`/events/${event.id}/vendor-details`)}
-                      >
-                        View Contract
-                      </button>
-                      <button 
-                        className="btn-secondary" 
-                        onClick={() => navigate(`/events/${event.id}/chat`)}
-                      >
-                        Contact Organizer
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {userRole === 'ATTENDEE' && (
-          <div className="dashboard-section">
-            <h3>Your Invited Events</h3>
-            {events.length === 0 ? (
-              <div className="no-events">
-                <p>No event invitations yet. Check back soon!</p>
-                <button className="btn-primary" onClick={() => navigate('/explore-events')}>
-                  Explore Events
-                </button>
-              </div>
-            ) : (
-              <div className="events-grid">
-                {events.map(event => (
-                  <div key={event.id} className="event-card">
-                    <h4>{event.eventName}</h4>
-                    <p><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
-                    <p><strong>Venue:</strong> {event.venue}</p>
-                    <p><strong>Type:</strong> {event.eventType}</p>
-                    <p><strong>Invitation Status:</strong> 
-                      <span className={`rsvp-status ${event.rsvpStatus?.toLowerCase()}`}>
-                        {event.rsvpStatus || 'Pending'}
-                      </span>
-                    </p>
-                    <div className="event-actions">
-                      <button 
-                        className="btn-primary" 
-                        onClick={() => handleViewEvent(event)}
-                      >
-                        View Details
-                      </button>
-                      <button 
-                        className="btn-secondary" 
-                        onClick={() => navigate(`/events/${event.id}/rsvp`)}
-                      >
-                        {event.rsvpStatus === 'ACCEPTED' ? 'Update RSVP' : 'RSVP'}
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {userRole === 'GUEST' && (
-          <div className="dashboard-section">
-            <h3>Welcome to Event Planner</h3>
-            <div className="guest-welcome">
-              <p>Discover and join amazing events in your area!</p>
-              <div className="guest-actions">
-                <button className="btn-primary" onClick={() => navigate('/explore-events')}>
-                  Explore Events
-                </button>
-                <button className="btn-secondary" onClick={() => navigate('/about')}>
-                  Learn More
-                </button>
-                <button className="btn-secondary" onClick={() => navigate('/signup')}>
-                  Sign Up
-                </button>
+                        <div className="timeline-dot"></div>
+                        <div className="timeline-tooltip">
+                          <strong>{item.title}</strong>
+                          <br />
+                          {item.date.toLocaleDateString()}
+                          {isToday && <span className="today-indicator">Today</span>}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Preserved Quick Actions div for future personal DMs */}
-        <div className="quick-actions">
-          {/* Future personal messaging feature will go here */}
+          {/* Left Column - Events */}
+          <div className="dashboard-left">
+            {/* Role-specific dashboard content */}
+            {userRole === 'ORGANIZER' && (
+              <div className="dashboard-section">
+                <h3>Your Events</h3>
+                {events.length === 0 ? (
+                  <div className="no-events">
+                    <p>No events created yet. Create your first event!</p>
+                    <button className="btn-primary" onClick={handleCreateEvent}>
+                      Create Event
+                    </button>
+                  </div>
+                ) : (
+                  <div className="events-grid">
+                    {events.map(event => (
+                      <div key={event.id} className="event-card">
+                        <h4>{event.eventName}</h4>
+                        <p><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
+                        <p><strong>Venue:</strong> {event.venue}</p>
+                        <p><strong>Type:</strong> {event.eventType}</p>
+                        <div className="event-actions">
+                          <button 
+                            className="btn-primary" 
+                            onClick={() => handleViewEvent(event)}
+                          >
+                            View Details
+                          </button>
+                          <button 
+                            className="btn-secondary" 
+                            onClick={() => handleEditEvent(event)}
+                          >
+                            Edit
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {userRole === 'VENDOR' && (
+              <div className="dashboard-section">
+                <h3>Your Event Contracts</h3>
+                {events.length === 0 ? (
+                  <div className="no-events">
+                    <p>No event contracts yet. Browse available opportunities!</p>
+                    <button className="btn-primary" onClick={() => navigate('/vendor-opportunities')}>
+                      Browse Opportunities
+                    </button>
+                  </div>
+                ) : (
+                  <div className="events-grid">
+                    {events.map(event => (
+                      <div key={event.id} className="event-card">
+                        <h4>{event.eventName}</h4>
+                        <p><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
+                        <p><strong>Service:</strong> {event.serviceType}</p>
+                        <p><strong>Status:</strong> 
+                          <span className={`contract-status ${event.contractStatus?.toLowerCase()}`}>
+                            {event.contractStatus}
+                          </span>
+                        </p>
+                        <div className="event-actions">
+                          <button 
+                            className="btn-primary" 
+                            onClick={() => navigate(`/events/${event.id}/vendor-details`)}
+                          >
+                            View Contract
+                          </button>
+                          <button 
+                            className="btn-secondary" 
+                            onClick={() => navigate(`/events/${event.id}/chat`)}
+                          >
+                            Contact Organizer
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {userRole === 'TEAM_MEMBER' && (
+              <div className="dashboard-section">
+                <h3>Team Events</h3>
+                {events.length === 0 ? (
+                  <div className="no-events">
+                    <p>No team events assigned yet.</p>
+                    <button className="btn-primary" onClick={() => navigate('/team-dashboard')}>
+                      View Team Dashboard
+                    </button>
+                  </div>
+                ) : (
+                  <div className="events-grid">
+                    {events.map(event => (
+                      <div key={event.id} className="event-card">
+                        <h4>{event.eventName}</h4>
+                        <p><strong>Date:</strong> {new Date(event.eventDate).toLocaleDateString()}</p>
+                        <p><strong>Venue:</strong> {event.venue}</p>
+                        <p><strong>Type:</strong> {event.eventType}</p>
+                        <p><strong>Your Role:</strong> Team Member</p>
+                        <div className="event-actions">
+                          <button 
+                            className="btn-primary" 
+                            onClick={() => handleViewEvent(event)}
+                          >
+                            View Details
+                          </button>
+                          <button 
+                            className="btn-secondary" 
+                            onClick={() => navigate(`/events/${event.id}/tasks`)}
+                          >
+                            My Tasks
+                          </button>
+                          {isEventDay && (
+                            <button 
+                              className="btn-agenda"
+                              onClick={() => navigate(`/events/${event.id}/agenda`)}
+                            >
+                              View Agenda
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {userRole === 'GUEST' && (
+              <div className="dashboard-section">
+                <h3>Welcome to Event Planner</h3>
+                <div className="guest-welcome">
+                  <p>Discover and join amazing events in your area!</p>
+                  <div className="guest-actions">
+                    <button className="btn-primary" onClick={() => navigate('/explore-events')}>
+                      Explore Events
+                    </button>
+                    <button className="btn-secondary" onClick={() => navigate('/about')}>
+                      Learn More
+                    </button>
+                    <button className="btn-secondary" onClick={() => navigate('/signup')}>
+                      Sign Up
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Right Column - Todo List and DM Panel */}
+          {userRole !== 'GUEST' && (
+            <div className="dashboard-right">
+              {/* Todo List */}
+              <div className="todo-section">
+                <div className="todo-header" onClick={toggleTaskExpansion}>
+                  <h4>Tasks</h4>
+                  <span className="todo-expand-icon">
+                    {expandedTasks ? '▼' : '▶'}
+                  </span>
+                </div>
+                {expandedTasks && (
+                  <div className="todo-list">
+                    {tasks.length === 0 ? (
+                      <p className="no-tasks">No tasks assigned</p>
+                    ) : (
+                      tasks
+                        .sort((a, b) => new Date(a.deadline) - new Date(b.deadline))
+                        .slice(0, 6)
+                        .map(task => (
+                          <div key={task.id} className={`todo-item ${getTaskPriorityClass(task.deadline)}`}>
+                            <div className="todo-content">
+                              <div className="todo-info">
+                                <strong>{task.taskName}</strong>
+                                <small>{new Date(task.deadline).toLocaleDateString()}</small>
+                              </div>
+                              {userRole !== 'ORGANIZER' && task.status !== 'COMPLETED' && (
+                                <button 
+                                  className="todo-done-btn"
+                                  onClick={() => handleMarkTaskDone(task.id)}
+                                  title="Mark as Done"
+                                >
+                                  ✓
+                                </button>
+                              )}
+                              {userRole === 'ORGANIZER' && (
+                                <span className={`task-status ${task.status?.toLowerCase()}`}>
+                                  {task.status || 'PENDING'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))
+                    )}
+                    {tasks.length > 6 && (
+                      <button className="todo-expand-more" onClick={toggleTaskExpansion}>
+                        {expandedTasks ? 'Show Less' : 'Show More'}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* DM Panel Placeholder */}
+              <div className="dm-section">
+                <div className="dm-header">
+                  <h4>Messages</h4>
+                </div>
+                <div className="dm-placeholder">
+                  <p>Direct messages will appear here</p>
+                  <small>DM functionality coming soon...</small>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
@@ -604,6 +881,47 @@ const Dashboard = () => {
               >
                 Update Event
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Calendar Modal */}
+      {showCalendarModal && (
+        <div className="modal-overlay" onClick={() => setShowCalendarModal(false)}>
+          <div className="calendar-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="calendar-header">
+              <h3>Event Calendar</h3>
+              <div className="calendar-nav">
+                <button 
+                  className="calendar-nav-btn"
+                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1))}
+                >
+                  ‹
+                </button>
+                <span className="calendar-month">
+                  {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                </span>
+                <button 
+                  className="calendar-nav-btn"
+                  onClick={() => setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1))}
+                >
+                  ›
+                </button>
+              </div>
+              <button 
+                className="modal-close-btn"
+                onClick={() => setShowCalendarModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className="calendar-grid">
+              {/* Calendar days would be generated here */}
+              <div className="calendar-placeholder">
+                <p>Calendar view with event dates and task deadlines</p>
+                <small>Full calendar implementation coming soon...</small>
+              </div>
             </div>
           </div>
         </div>

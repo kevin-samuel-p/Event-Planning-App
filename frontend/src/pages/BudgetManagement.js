@@ -22,29 +22,90 @@ const BudgetManagement = () => {
   const [paymentForm, setPaymentForm] = useState({
     amount: '',
     paymentDate: new Date().toISOString().split('T')[0],
-    paymentStatus: 'PAID'
+    paymentStatus: 'PAID',
+    recipientName: '',
+    vendorId: ''
   });
+
+  const [vendors, setVendors] = useState([]);
+  const [vendorSuggestions, setVendorSuggestions] = useState([]);
+  const [showVendorSuggestions, setShowVendorSuggestions] = useState(false);
 
   useEffect(() => {
     fetchBudgetData();
+    fetchVendors();
   }, [id]);
+
+  // Close vendor suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.vendor-input-container')) {
+        setShowVendorSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const fetchVendors = async () => {
+    try {
+      const vendorsData = await eventAPI.getEventVendors(id);
+      setVendors(vendorsData || []);
+    } catch (err) {
+      console.error('Failed to fetch vendors:', err);
+    }
+  };
+
+  const handleVendorNameChange = (e) => {
+    const value = e.target.value;
+    setPaymentForm({...paymentForm, recipientName: value, vendorId: ''});
+    
+    if (value.length > 0) {
+      const filtered = vendors.filter(vendor => 
+        vendor.vendorName.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 4);
+      setVendorSuggestions(filtered);
+      setShowVendorSuggestions(true);
+    } else {
+      setVendorSuggestions([]);
+      setShowVendorSuggestions(false);
+    }
+  };
+
+  const handleVendorSelect = (vendor) => {
+    setPaymentForm({
+      ...paymentForm,
+      recipientName: vendor.vendorName,
+      vendorId: vendor.vendorId
+    });
+    setVendorSuggestions([]);
+    setShowVendorSuggestions(false);
+  };
 
   const fetchBudgetData = async () => {
     try {
-      // For now, we'll simulate budget data
-      // In a real app, you'd have API calls to get budget and payments
-      setBudget({
-        id: 1,
-        eventId: parseInt(id),
-        totalBudget: 5000.00,
-        spentAmount: 1200.50
-      });
-      setPayments([
-        { id: 1, amount: 800.00, paymentDate: '2026-03-15', paymentStatus: 'PAID', transactorName: 'Alice Johnson', vendorName: 'Catering Co.' },
-        { id: 2, amount: 400.50, paymentDate: '2026-03-16', paymentStatus: 'PAID', transactorName: 'Alice Johnson', vendorName: 'Flower Shop' }
-      ]);
+      setLoading(true);
+      setError('');
+      
+      // Fetch budget data
+      const budgetData = await eventAPI.getBudget(id);
+      setBudget(budgetData);
+      
+      // Fetch payments data if budget exists
+      if (budgetData) {
+        const paymentsData = await eventAPI.getPayments(budgetData.id);
+        setPayments(paymentsData || []);
+      } else {
+        setPayments([]);
+      }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to fetch budget data');
+      console.error('Failed to fetch budget data:', err);
+      setError('Failed to load budget data. Please try again.');
+      setBudget(null);
+      setPayments([]);
     } finally {
       setLoading(false);
     }
@@ -65,22 +126,56 @@ const BudgetManagement = () => {
   const handleAddPayment = async (e) => {
     e.preventDefault();
     try {
-      // For now, we'll simulate adding payment
-      const newPayment = {
-        id: payments.length + 1,
+      if (!budget || !budget.id) {
+        throw new Error('Budget not found. Please create a budget first.');
+      }
+      
+      if (!paymentForm.vendorId) {
+        throw new Error('Please select a vendor from the dropdown.');
+      }
+      
+      console.log('Adding payment with budget ID:', budget.id);
+      console.log('Payment data:', {
+        eventVendorId: paymentForm.vendorId,
         amount: parseFloat(paymentForm.amount),
         paymentDate: paymentForm.paymentDate,
-        paymentStatus: paymentForm.paymentStatus
-      };
-      setPayments([...payments, newPayment]);
+        paymentStatus: paymentForm.paymentStatus,
+        recipientName: paymentForm.recipientName
+      });
+      
+      const response = await eventAPI.addPayment(budget.id, {
+        eventVendorId: paymentForm.vendorId,
+        amount: parseFloat(paymentForm.amount),
+        paymentDate: paymentForm.paymentDate,
+        paymentStatus: paymentForm.paymentStatus,
+        recipientName: paymentForm.recipientName
+      });
+      
+      setPayments([...payments, { ...response, recipientName: paymentForm.recipientName }]);
       setShowAddPayment(false);
       setPaymentForm({
         amount: '',
         paymentDate: new Date().toISOString().split('T')[0],
-        paymentStatus: 'PAID'
+        paymentStatus: 'PAID',
+        recipientName: '',
+        vendorId: ''
       });
+      setError('');
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to add payment');
+      console.error('Failed to add payment:', err);
+      console.error('Error response:', err.response?.data);
+      
+      // Handle specific Event Vendor not found error
+      let errorMessage = 'Failed to add payment';
+      if (err.response?.data?.message && err.response.data.message.includes('Event vendor not found')) {
+        errorMessage = 'Cannot add payment: No vendor found for this event. Please add a vendor to the event first before adding payments.';
+      } else if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+      
+      setError(errorMessage);
     }
   };
 
@@ -157,7 +252,10 @@ const BudgetManagement = () => {
               <h3>Payments</h3>
               <button 
                 className="btn-primary"
-                onClick={() => setShowAddPayment(true)}
+                onClick={() => {
+                  setShowAddPayment(true);
+                  setError(''); // Clear any previous errors
+                }}
               >
                 Add Payment
               </button>
@@ -168,14 +266,12 @@ const BudgetManagement = () => {
                 <div key={payment.id} className="payment-item">
                   <div className="payment-main-info">
                     <div className="payment-transaction">
-                      <span className="transactor">{payment.transactorName}</span>
-                      <span className="arrow">→</span>
-                      <span className="vendor">{payment.vendorName}</span>
+                      <span className="recipient">Paid to: {payment.recipientName || 'Unknown'}</span>
                     </div>
                     <div className="payment-amount">${payment.amount.toFixed(2)}</div>
                   </div>
                   <div className="payment-meta">
-                    <span className="payment-date">{payment.paymentDate}</span>
+                    <span className="payment-date">{new Date(payment.paymentDate).toLocaleDateString()}</span>
                     <span className={`payment-status ${payment.paymentStatus.toLowerCase()}`}>
                       {payment.paymentStatus}
                     </span>
@@ -189,6 +285,18 @@ const BudgetManagement = () => {
             <div className="modal-overlay">
               <div className="modal">
                 <h3>Add Payment</h3>
+                {error && (
+                  <div className="error-message" style={{ 
+                    backgroundColor: '#fee', 
+                    border: '1px solid #fcc', 
+                    borderRadius: '4px', 
+                    padding: '10px', 
+                    marginBottom: '15px', 
+                    color: '#c33'
+                  }}>
+                    {error}
+                  </div>
+                )}
                 <form onSubmit={handleAddPayment}>
                   <div className="form-group">
                     <label>Amount:</label>
@@ -199,6 +307,32 @@ const BudgetManagement = () => {
                       onChange={(e) => setPaymentForm({...paymentForm, amount: e.target.value})}
                       required
                     />
+                  </div>
+                  <div className="form-group">
+                    <label>Recipient Name:</label>
+                    <div className="vendor-input-container">
+                      <input
+                        type="text"
+                        value={paymentForm.recipientName}
+                        onChange={handleVendorNameChange}
+                        onFocus={() => paymentForm.recipientName.length > 0 && setShowVendorSuggestions(true)}
+                        placeholder="Start typing vendor name..."
+                        required
+                      />
+                      {showVendorSuggestions && vendorSuggestions.length > 0 && (
+                        <div className="vendor-suggestions">
+                          {vendorSuggestions.map((vendor, index) => (
+                            <div
+                              key={index}
+                              className="vendor-suggestion-item"
+                              onClick={() => handleVendorSelect(vendor)}
+                            >
+                              {vendor.vendorName} - {vendor.serviceType}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="form-group">
                     <label>Payment Date:</label>
@@ -222,7 +356,10 @@ const BudgetManagement = () => {
                   </div>
                   <div className="form-actions">
                     <button type="submit" className="btn-primary">Add Payment</button>
-                    <button type="button" className="btn-secondary" onClick={() => setShowAddPayment(false)}>
+                    <button type="button" className="btn-secondary" onClick={() => {
+                      setShowAddPayment(false);
+                      setError(''); // Clear error when canceling
+                    }}>
                       Cancel
                     </button>
                   </div>
