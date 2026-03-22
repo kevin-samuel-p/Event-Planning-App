@@ -140,6 +140,11 @@ export const eventAPI = {
     return response.data;
   },
 
+  getAllTeamMembers: async () => {
+    const response = await api.get('/team-members/list');
+    return response.data;
+  },
+
   createTask: async (eventId, taskData) => {
     const response = await api.post(`/events/${eventId}/tasks`, taskData);
     return response.data;

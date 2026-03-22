@@ -125,6 +125,11 @@ public class EventWorkflowController {
         return service.getAllVendors();
     }
 
+    @GetMapping("/team-members/list")
+    public List<VendorResponse> getAllTeamMembers() {
+        return service.getAllTeamMembers();
+    }
+
     @GetMapping("/test")
     public String testEndpoint() {
         return "Controller is working!";

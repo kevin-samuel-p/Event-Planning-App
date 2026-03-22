@@ -17,12 +17,78 @@ const TaskManagement = () => {
     taskName: '',
     description: '',
     deadline: '',
-    assignedToUserId: ''
+    assignedToUserId: '',
+    assignedToUserName: ''
   });
+
+  const [teamMembers, setTeamMembers] = useState([]);
+  const [teamMemberSuggestions, setTeamMemberSuggestions] = useState([]);
+  const [showTeamMemberSuggestions, setShowTeamMemberSuggestions] = useState(false);
 
   useEffect(() => {
     fetchTasks();
+    fetchTeamMembers();
   }, [id]);
+
+  // Close team member suggestions when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (!event.target.closest('.team-member-input-container')) {
+        setShowTeamMemberSuggestions(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const fetchTeamMembers = async () => {
+    try {
+      // Fetch both team members and vendors for task assignment
+      const [teamMembersData, vendorsData] = await Promise.all([
+        eventAPI.getAllTeamMembers(),
+        eventAPI.getAllVendors()
+      ]);
+      
+      // Combine both team members and vendors
+      const allAssignableUsers = [
+        ...(teamMembersData || []),
+        ...(vendorsData || [])
+      ];
+      
+      setTeamMembers(allAssignableUsers);
+    } catch (err) {
+      console.error('Failed to fetch team members:', err);
+    }
+  };
+
+  const handleTeamMemberNameChange = (e) => {
+    const value = e.target.value;
+    setTaskForm({...taskForm, assignedToUserName: value, assignedToUserId: ''});
+    
+    if (value.length > 0) {
+      const filtered = teamMembers.filter(member => 
+        member.name.toLowerCase().includes(value.toLowerCase())
+      ).slice(0, 4); // Limit to 4 suggestions
+      setTeamMemberSuggestions(filtered);
+      setShowTeamMemberSuggestions(true);
+    } else {
+      setTeamMemberSuggestions([]);
+      setShowTeamMemberSuggestions(false);
+    }
+  };
+
+  const handleTeamMemberSelect = (member) => {
+    setTaskForm({
+      ...taskForm,
+      assignedToUserName: member.name,
+      assignedToUserId: member.id
+    });
+    setTeamMemberSuggestions([]);
+    setShowTeamMemberSuggestions(false);
+  };
 
   const fetchTasks = async () => {
     try {
@@ -76,6 +142,11 @@ const TaskManagement = () => {
   const handleCreateTask = async (e) => {
     e.preventDefault();
     try {
+      // Validate that a team member is selected
+      if (!taskForm.assignedToUserId) {
+        throw new Error('Please select a team member from the dropdown.');
+      }
+
       const response = await eventAPI.createTask(id, taskForm);
       setTasks([...tasks, response]);
       setShowCreateTask(false);
@@ -83,12 +154,13 @@ const TaskManagement = () => {
         taskName: '',
         description: '',
         deadline: '',
-        assignedToUserId: ''
+        assignedToUserId: '',
+        assignedToUserName: ''
       });
       setError('');
     } catch (err) {
       console.error('Failed to create task:', err);
-      setError(err.response?.data?.message || 'Failed to create task');
+      setError(err.response?.data?.message || err.message || 'Failed to create task');
     }
   };
 
@@ -182,12 +254,7 @@ const TaskManagement = () => {
                       <option value="IN_PROGRESS">In Progress</option>
                       <option value="DONE">Done</option>
                     </select>
-                  ) : (
-                    <div className="status-display">
-                      <span className="status-label">Status:</span>
-                      <span className="status-value">{task.status.replace('_', ' ')}</span>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               </div>
             ))}
@@ -228,13 +295,30 @@ const TaskManagement = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Assign to User ID:</label>
-                <input
-                  type="number"
-                  value={taskForm.assignedToUserId}
-                  onChange={(e) => setTaskForm({...taskForm, assignedToUserId: e.target.value})}
-                  required
-                />
+                <label>Assign to Team Member:</label>
+                <div className="team-member-input-container">
+                  <input
+                    type="text"
+                    value={taskForm.assignedToUserName}
+                    onChange={handleTeamMemberNameChange}
+                    onFocus={() => taskForm.assignedToUserName.length > 0 && setShowTeamMemberSuggestions(true)}
+                    placeholder="Start typing team member name..."
+                    required
+                  />
+                  {showTeamMemberSuggestions && teamMemberSuggestions.length > 0 && (
+                    <div className="team-member-suggestions">
+                      {teamMemberSuggestions.map((member, index) => (
+                        <div
+                          key={index}
+                          className="team-member-suggestion-item"
+                          onClick={() => handleTeamMemberSelect(member)}
+                        >
+                          {member.name} - {member.role}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="form-actions">
                 <button type="submit" className="btn-primary">Create Task</button>

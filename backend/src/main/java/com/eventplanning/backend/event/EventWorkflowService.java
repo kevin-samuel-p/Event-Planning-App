@@ -260,6 +260,12 @@ public class EventWorkflowService {
                 .toList();
     }
 
+    public List<VendorResponse> getAllTeamMembers() {
+        return userRepository.findByRole(Role.TEAM_MEMBER).stream()
+                .map(VendorResponse::from)
+                .toList();
+    }
+
     public VendorResponse getVendorDetails(Long vendorId) {
         User vendor = userRepository.findById(vendorId)
                 .orElseThrow(() -> new NotFoundException("Vendor not found"));

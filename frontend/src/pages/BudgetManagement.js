@@ -103,12 +103,50 @@ const BudgetManagement = () => {
       }
     } catch (err) {
       console.error('Failed to fetch budget data:', err);
-      setError('Failed to load budget data. Please try again.');
-      setBudget(null);
-      setPayments([]);
+      setError(err.response?.data?.message || err.message || 'Failed to load budget data');
     } finally {
       setLoading(false);
     }
+  };
+
+  // Calculate analytics data
+  const calculateAnalytics = () => {
+    if (!budget || !payments.length) {
+      return {
+        totalSpent: 0,
+        remainingBudget: 0,
+        spentPercentage: 0,
+        savingsPercentage: 0,
+        weeklyData: []
+      };
+    }
+
+    const totalSpent = payments.reduce((sum, payment) => {
+      if (payment.paymentStatus === 'PAID') {
+        return sum + payment.amount;
+      }
+      return sum;
+    }, 0);
+
+    const remainingBudget = budget.totalBudget - totalSpent;
+    const spentPercentage = (totalSpent / budget.totalBudget) * 100;
+    const savingsPercentage = remainingBudget > 0 ? (remainingBudget / budget.totalBudget) * 100 : 0;
+
+    // Calculate weekly data (mock for now - can be enhanced with real date logic)
+    const weeklyData = [
+      { week: 'Week 1', amount: totalSpent * 0.3 },
+      { week: 'Week 2', amount: totalSpent * 0.25 },
+      { week: 'Week 3', amount: totalSpent * 0.2 },
+      { week: 'Week 4', amount: totalSpent * 0.25 }
+    ];
+
+    return {
+      totalSpent,
+      remainingBudget,
+      spentPercentage,
+      savingsPercentage,
+      weeklyData
+    };
   };
 
   const handleCreateBudget = async (e) => {
@@ -394,29 +432,16 @@ const BudgetManagement = () => {
               </select>
             </div>
             
-            <div className="chart-container">
-              <div className="mock-chart">
-                <div className="chart-bar" style={{ height: '60%' }}></div>
-                <div className="chart-bar" style={{ height: '80%' }}></div>
-                <div className="chart-bar" style={{ height: '45%' }}></div>
-                <div className="chart-bar" style={{ height: '90%' }}></div>
-              </div>
-              <div className="chart-labels">
-                <span>Week 1</span>
-                <span>Week 2</span>
-                <span>Week 3</span>
-                <span>Week 4</span>
-              </div>
-            </div>
-
             <div className="analytics-stats">
               <div className="stat-item">
                 <label>Budget Spent This {analyticsPeriod === 'weekly' ? 'Week' : 'Month'}</label>
-                <span className="stat-value">$450.25</span>
+                <span className="stat-value">${calculateAnalytics().totalSpent.toFixed(2)}</span>
               </div>
               <div className="stat-item">
                 <label>Savings %</label>
-                <span className="stat-value positive">+12.5%</span>
+                <span className={`stat-value ${calculateAnalytics().savingsPercentage >= 0 ? 'positive' : 'negative'}`}>
+                  {calculateAnalytics().savingsPercentage >= 0 ? '+' : ''}{calculateAnalytics().savingsPercentage.toFixed(1)}%
+                </span>
               </div>
               <div className="stat-item">
                 <label>vs Last {analyticsPeriod === 'weekly' ? 'Week' : 'Month'}</label>
@@ -425,6 +450,29 @@ const BudgetManagement = () => {
               <div className="stat-item">
                 <label>vs Median</label>
                 <span className="stat-value positive">+8.1%</span>
+              </div>
+            </div>
+            <div className="chart-container">
+              <div className="mock-chart">
+                {calculateAnalytics().weeklyData.map((week, index) => {
+                  const maxAmount = Math.max(...calculateAnalytics().weeklyData.map(w => w.amount));
+                  const heightPercentage = (week.amount / maxAmount) * 100;
+                  return (
+                    <div key={index} className="chart-bar-container">
+                      <div 
+                        className="chart-bar" 
+                        style={{ height: `${heightPercentage}%` }}
+                        title={`${week.week}: $${week.amount.toFixed(2)}`}
+                      ></div>
+                      <div className="chart-week-label">{week.week}</div>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="chart-labels">
+                {calculateAnalytics().weeklyData.map((week, index) => (
+                  <span key={index}>{week.week}</span>
+                ))}
               </div>
             </div>
           </div>
