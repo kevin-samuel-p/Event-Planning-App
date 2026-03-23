@@ -4,6 +4,7 @@ import com.eventplanning.backend.common.CurrentUserProvider;
 import com.eventplanning.backend.common.NotFoundException;
 import com.eventplanning.backend.event.Event;
 import com.eventplanning.backend.event.EventRepository;
+import com.eventplanning.backend.groupchat.ChatMemberAttributeRepository;
 import com.eventplanning.backend.user.Role;
 import com.eventplanning.backend.user.User;
 import com.eventplanning.backend.user.UserRepository;
@@ -20,18 +21,59 @@ public class GroupChatService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final ChatMemberRepository chatMemberRepository;
-    private final AttributeRepository attributeRepository;
+    private final ChatMemberAttributeRepository attributeRepository;
     private final CurrentUserProvider currentUserProvider;
 
     public GroupChatService(GroupChatRepository groupChatRepository, EventRepository eventRepository,
                             UserRepository userRepository, ChatMemberRepository chatMemberRepository,
-                            AttributeRepository attributeRepository, CurrentUserProvider currentUserProvider) {
+                            ChatMemberAttributeRepository attributeRepository, CurrentUserProvider currentUserProvider) {
         this.groupChatRepository = groupChatRepository;
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
         this.chatMemberRepository = chatMemberRepository;
         this.attributeRepository = attributeRepository;
         this.currentUserProvider = currentUserProvider;
+    }
+
+    public GroupChatResponse getEventGroupChat(Long eventId) {
+        User currentUser = currentUserProvider.requireCurrentUser();
+        
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event not found"));
+
+        // Find or create group chat for this event
+        GroupChat groupChat = groupChatRepository.findByEventId(eventId)
+                .orElseGet(() -> {
+                    // Create a new group chat if none exists
+                    String joinCode = generateJoinCode();
+                    GroupChat newGroupChat = groupChatRepository.save(GroupChat.builder()
+                            .gcName(event.getEventName() + " Chat")
+                            .joinCode(joinCode)
+                            .createdByUser(currentUser)
+                            .event(event)
+                            .createdAt(java.time.LocalDate.now())
+                            .build());
+                    
+                    // Auto-join the event organizer
+                    chatMemberRepository.save(ChatMember.builder()
+                            .groupChat(newGroupChat)
+                            .user(currentUser)
+                            .joinedAt(java.time.LocalDate.now())
+                            .build());
+                    
+                    return newGroupChat;
+                });
+
+        // Ensure current user is a member
+        if (chatMemberRepository.findByGroupChatIdAndUserId(groupChat.getId(), currentUser.getId()).isEmpty()) {
+            chatMemberRepository.save(ChatMember.builder()
+                    .groupChat(groupChat)
+                    .user(currentUser)
+                    .joinedAt(java.time.LocalDate.now())
+                    .build());
+        }
+
+        return GroupChatResponse.from(groupChat);
     }
 
     public GroupChatResponse createGroupChat(CreateGroupChatRequest request) {

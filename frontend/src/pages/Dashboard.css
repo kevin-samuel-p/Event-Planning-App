@@ -672,21 +672,31 @@
   font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .task-status.pending {
-  background: #fff3cd;
-  color: #856404;
+  background: #ff9800;
+  color: #ffffff;
+  border: 1px solid #f57c00;
 }
 
 .task-status.in-progress {
-  background: #cce5ff;
-  color: #004085;
+  background: #2196f3;
+  color: #ffffff;
+  border: 1px solid #1976d2;
 }
 
 .task-status.completed {
-  background: #d4edda;
-  color: #155724;
+  background: #4caf50;
+  color: #ffffff;
+  border: 1px solid #388e3c;
+}
+
+.task-status.todo {
+  background: #ff9800;
+  color: #ffffff;
+  border: 1px solid #f57c00;
 }
 
 /* Task Priority Colors */

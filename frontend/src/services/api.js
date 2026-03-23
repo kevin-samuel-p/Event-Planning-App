@@ -219,6 +219,11 @@ export const eventAPI = {
 
 // Chat API calls
 export const chatAPI = {
+  getEventGroupChat: async (eventId) => {
+    const response = await api.get(`/group-chats/event/${eventId}`);
+    return response.data;
+  },
+
   getGroupChats: async () => {
     const response = await api.get('/group-chats');
     return response.data;
@@ -236,6 +241,11 @@ export const chatAPI = {
 
   getGroupChatMembers: async (groupChatId) => {
     const response = await api.get(`/group-chats/${groupChatId}/members`);
+    return response.data;
+  },
+
+  addMemberToForum: async (forumId, userId) => {
+    const response = await api.post(`/forums/${forumId}/members`, { userId });
     return response.data;
   },
 

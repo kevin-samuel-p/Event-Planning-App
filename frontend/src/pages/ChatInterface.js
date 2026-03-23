@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { chatAPI } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import './ChatInterface.css';
 
 const ChatInterface = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [groupChat, setGroupChat] = useState(null);
   const [forums, setForums] = useState([]);
   const [selectedForum, setSelectedForum] = useState(null);
@@ -24,9 +26,14 @@ const ChatInterface = () => {
   const [showMentionSuggestions, setShowMentionSuggestions] = useState(false);
   const [mentionIndex, setMentionIndex] = useState(0);
   const [highlightedMessages, setHighlightedMessages] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [showCreateForumModal, setShowCreateForumModal] = useState(false);
+  const [createForumName, setCreateForumName] = useState('');
+  const [showAddMemberModal, setShowAddMemberModal] = useState(false);
+  const [addMemberUserId, setAddMemberUserId] = useState('');
   
   const messagesEndRef = useRef(null);
-  const currentUser = { id: 1, name: 'Alice Johnson', role: 'ORGANIZER' }; // Mock current user
 
   useEffect(() => {
     initializeChat();
@@ -36,78 +43,130 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
+  useEffect(() => {
+    // Set up polling for real-time updates
+    const interval = setInterval(() => {
+      if (selectedForum) {
+        fetchMessages(selectedForum.id);
+      }
+    }, 3000); // Poll every 3 seconds
+
+    return () => clearInterval(interval);
+  }, [selectedForum]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const initializeChat = async () => {
     try {
-      // Mock data for now - in real app, call APIs
-      setGroupChat({
-        id: 1,
-        gcName: 'Summer Wedding Chat',
-        joinCode: 'WED123',
-        eventId: parseInt(id)
-      });
-
-      setForums([
-        { id: 1, gcId: 1, forumName: 'General Discussion', createdAt: '2026-03-15T10:00:00Z' },
-        { id: 2, gcId: 1, forumName: 'Planning', createdAt: '2026-03-15T11:00:00Z' },
-        { id: 3, gcId: 1, forumName: 'Vendor Coordination', createdAt: '2026-03-15T12:00:00Z' }
-      ]);
-
-      setMembers([
-        { userId: 1, name: 'Alice Johnson', email: 'alice@example.com', role: 'ORGANIZER', joinedAt: '2026-03-15T10:00:00Z', online: true },
-        { userId: 2, name: 'Bob Smith', email: 'bob@example.com', role: 'TEAM_MEMBER', joinedAt: '2026-03-15T10:30:00Z', online: true },
-        { userId: 3, name: 'Carol White', email: 'carol@example.com', role: 'VENDOR', joinedAt: '2026-03-15T11:00:00Z', online: false },
-        { userId: 4, name: 'David Brown', email: 'david@example.com', role: 'GUEST', joinedAt: '2026-03-15T11:30:00Z', online: false }
-      ]);
-
-      // Select first forum by default
-      const firstForum = { id: 1, gcId: 1, forumName: 'General Discussion' };
-      setSelectedForum(firstForum);
-      loadForumMessages(firstForum.id);
-    } catch (error) {
-      console.error('Failed to initialize chat:', error);
+      setLoading(true);
+      setError('');
+      
+      // Get or create group chat for this event
+      const groupChatData = await chatAPI.getEventGroupChat(id);
+      setGroupChat(groupChatData);
+      
+      // Get forums for this group chat
+      const forumsData = await chatAPI.getForums(groupChatData.id);
+      setForums(forumsData || []);
+      
+      // Get members
+      const membersData = await chatAPI.getGroupChatMembers(groupChatData.id);
+      setMembers(membersData || []);
+      
+      // Ensure current user (organizer) is in the members list
+      if (user && membersData && !membersData.some(member => member.userId === user.id)) {
+        const organizerMember = {
+          userId: user.id,
+          name: user.name || user.email || 'Organizer',
+          email: user.email,
+          role: user.role,
+          joinedAt: new Date().toISOString(),
+          online: true
+        };
+        setMembers(prev => [...prev, organizerMember]);
+      }
+      
+      // Only select a forum if one exists, otherwise show forum creation UI
+      if (forumsData && forumsData.length > 0) {
+        await selectForum(forumsData[0]);
+      }
+      // If no forums exist, don't select anything - show forum creation UI
+    } catch (err) {
+      console.error('Failed to initialize chat:', err);
+      setError('Failed to load chat. Please try again.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const loadForumMessages = async (forumId) => {
+  const createDefaultForum = async () => {
     try {
-      // Mock messages
-      const mockMessages = [
-        {
-          id: 1,
-          forumId: forumId,
-          senderId: 1,
-          senderName: 'Alice Johnson',
-          content: 'Welcome everyone to the wedding planning chat!',
-          timestamp: '2026-03-15T10:00:00Z',
-          isEdited: false
-        },
-        {
-          id: 2,
-          forumId: forumId,
-          senderId: 2,
-          senderName: 'Bob Smith',
-          content: 'Excited to help with the planning! @alice what are the main priorities?',
-          timestamp: '2026-03-15T10:05:00Z',
-          isEdited: false
-        },
-        {
-          id: 3,
-          forumId: forumId,
-          senderId: 1,
-          senderName: 'Alice Johnson',
-          content: 'Great question @bob! We need to focus on venue, catering, and photography first.',
-          timestamp: '2026-03-15T10:10:00Z',
-          isEdited: false
-        }
-      ];
-      setMessages(mockMessages);
-    } catch (error) {
-      console.error('Failed to load messages:', error);
+      const defaultForum = await chatAPI.createForum({
+        groupChatId: groupChat.id,
+        forumName: 'General Discussion'
+      });
+      setForums([defaultForum]);
+      await selectForum(defaultForum);
+    } catch (err) {
+      console.error('Failed to create default forum:', err);
     }
+  };
+
+  const handleCreateForum = async () => {
+    if (!createForumName.trim()) return;
+    
+    try {
+      const newForum = await chatAPI.createForum({
+        groupChatId: groupChat.id,
+        forumName: createForumName.trim()
+      });
+      setForums(prev => [...prev, newForum]);
+      await selectForum(newForum);
+      setCreateForumName('');
+      setShowCreateForumModal(false);
+    } catch (err) {
+      console.error('Failed to create forum:', err);
+      setError('Failed to create forum. Please try again.');
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (!addMemberUserId.trim()) return;
+    
+    try {
+      const newMember = await chatAPI.addMemberToForum(selectedForum.id, addMemberUserId);
+      setMembers(prev => [...prev, newMember]);
+      setAddMemberUserId('');
+      setShowAddMemberModal(false);
+    } catch (err) {
+      console.error('Failed to add member:', err);
+      setError('Failed to add member. Please try again.');
+    }
+  };
+
+  const selectForum = async (forum) => {
+    try {
+      setSelectedForum(forum);
+      await fetchMessages(forum.id);
+    } catch (err) {
+      console.error('Failed to select forum:', err);
+    }
+  };
+
+  const fetchMessages = async (forumId) => {
+    try {
+      const messagesData = await chatAPI.getForumMessages(forumId);
+      setMessages(messagesData || []);
+    } catch (err) {
+      console.error('Failed to fetch messages:', err);
+    }
+  };
+
+  const getCurrentUserName = () => {
+    const currentUserMember = members.find(member => member.userId === user?.id);
+    return currentUserMember?.name || currentUserMember?.userName || user?.name || user?.email || 'You';
   };
 
   const handleSendMessage = async (e) => {
@@ -117,55 +176,29 @@ const ChatInterface = () => {
     try {
       const messageData = {
         forumId: selectedForum.id,
-        content: newMessage.trim()
+        message: newMessage.trim()
       };
 
-      // Mock sending message
-      const newMsg = {
-        id: messages.length + 1,
-        forumId: selectedForum.id,
-        senderId: currentUser.id,
-        senderName: currentUser.name,
-        content: newMessage.trim(),
-        timestamp: new Date().toISOString(),
-        isEdited: false
-      };
-
-      setMessages([...messages, newMsg]);
-      setNewMessage('');
-
-      // Handle @user mentions
-      const mentions = newMessage.match(/@(\w+)/g);
-      if (mentions) {
-        mentions.forEach(mention => {
-          const username = mention.substring(1);
-          const mentionedUser = members.find(m => 
-            m.name.toLowerCase().replace(/\s+/g, '') === username.toLowerCase()
-          );
-          if (mentionedUser) {
-            // Add to highlighted messages
-            setHighlightedMessages(prev => new Set([...prev, newMsg.id]));
-            // In real app, send notification to mentioned user
-            console.log(`Notifying ${mentionedUser.name}`);
-          }
-        });
-      }
+      // Send message via API
+      const response = await chatAPI.sendGcMessage(messageData);
       
-      // Handle @everyone mentions
-      if (newMessage.includes('@everyone')) {
-        // Add to highlighted messages for all members
-        setHighlightedMessages(prev => new Set([...prev, newMsg.id]));
-        // In real app, send notifications to all members
-        console.log('Notifying all members');
-      }
-    } catch (error) {
-      console.error('Failed to send message:', error);
+      // Add the new message to the local state
+      setMessages(prev => [...prev, response]);
+      
+      // Clear input
+      setNewMessage('');
+      
+      // Scroll to bottom
+      scrollToBottom();
+    } catch (err) {
+      console.error('Failed to send message:', err);
+      setError('Failed to send message. Please try again.');
     }
   };
 
   const handleForumSelect = (forum) => {
     setSelectedForum(forum);
-    loadForumMessages(forum.id);
+    fetchMessages(forum.id);
   };
 
   const handleInputChange = (e) => {
@@ -184,7 +217,7 @@ const ChatInterface = () => {
       
       if (currentMention.length > 0) {
         const filteredMembers = members.filter(member => 
-          member.name.toLowerCase().includes(currentMention.toLowerCase())
+          (member.name || member.userName || '').toLowerCase().includes(currentMention.toLowerCase())
         );
         setMentionSuggestions(filteredMembers);
         setShowMentionSuggestions(true);
@@ -206,7 +239,7 @@ const ChatInterface = () => {
     const textAfterCursor = newMessage.substring(cursorPosition);
     
     const newMessageText = textBeforeCursor.substring(0, lastAtIndex) + 
-                          '@' + member.name.toLowerCase().replace(/\s+/g, '') + 
+                          '@' + (member.name || member.userName || '').toLowerCase().replace(/\s+/g, '') + 
                           ' ' + textAfterCursor;
     
     setNewMessage(newMessageText);
@@ -216,7 +249,7 @@ const ChatInterface = () => {
     setTimeout(() => {
       const input = document.querySelector('.message-input');
       input.focus();
-      const newCursorPosition = lastAtIndex + member.name.toLowerCase().replace(/\s+/g, '').length + 2;
+      const newCursorPosition = lastAtIndex + (member.name || member.userName || '').toLowerCase().replace(/\s+/g, '').length + 2;
       input.setSelectionRange(newCursorPosition, newCursorPosition);
     }, 0);
   };
@@ -240,7 +273,7 @@ const ChatInterface = () => {
         forumId: selectedForum.id,
         senderId: 0,
         senderName: 'System',
-        content: `${currentUser.name} changed their message`,
+        content: `${user.name} changed their message`,
         timestamp: new Date().toISOString(),
         isEdited: false,
         isSystem: true
@@ -296,7 +329,7 @@ const ChatInterface = () => {
         forumId: selectedForum.id,
         senderId: 0,
         senderName: 'System',
-        content: `${currentUser.name} changed the forum title from "${oldName}" to "${newForumName}"`,
+        content: `${user.name} changed the forum title from "${oldName}" to "${newForumName}"`,
         timestamp: new Date().toISOString(),
         isEdited: false,
         isSystem: true
@@ -321,8 +354,8 @@ const ChatInterface = () => {
     setShowMessageMenu({ message, x: e.clientX, y: e.clientY });
   };
 
-  const isAdmin = currentUser.role === 'ORGANIZER';
-  const isOwnMessage = (message) => message.senderId === currentUser.id;
+  const isAdmin = user.role === 'ORGANIZER';
+  const isOwnMessage = (message) => message.senderId === user.id;
 
   return (
     <div className="chat-interface">
@@ -352,120 +385,180 @@ const ChatInterface = () => {
         <div className="forums-panel">
           <div className="forums-header">
             <h4>Forums</h4>
+            <div className="forum-actions">
+              {isAdmin && (
+                <button 
+                  className="add-member-btn"
+                  onClick={() => setShowAddMemberModal(true)}
+                  title="Add member to forum"
+                  disabled={!selectedForum}
+                >
+                  + Add
+                </button>
+              )}
+              <button 
+                className="create-forum-btn"
+                onClick={() => setShowCreateForumModal(true)}
+                title="Create new forum"
+              >
+                +
+              </button>
+            </div>
           </div>
           <div className="forums-list">
-            {forums.map(forum => (
-              <div
-                key={forum.id}
-                className={`forum-item ${selectedForum?.id === forum.id ? 'active' : ''}`}
-                onClick={() => handleForumSelect(forum)}
-                onContextMenu={(e) => isAdmin && handleForumRightClick(e, forum)}
-              >
-                <span className="forum-name">{forum.forumName}</span>
-                <span className="forum-time">
-                  {new Date(forum.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </span>
+            {forums.length === 0 ? (
+              <div className="no-forums">
+                {isAdmin ? (
+                  <div className="no-forums-admin">
+                    <p>No forums yet. Create your first forum to start chatting!</p>
+                    <button 
+                      className="create-first-forum-btn"
+                      onClick={() => setShowCreateForumModal(true)}
+                    >
+                      Create Forum
+                    </button>
+                  </div>
+                ) : (
+                  <p>No forums available. Waiting for organizer to create forums...</p>
+                )}
               </div>
-            ))}
+            ) : (
+              forums.map(forum => (
+                <div
+                  key={forum.id}
+                  className={`forum-item ${selectedForum?.id === forum.id ? 'active' : ''}`}
+                  onClick={() => handleForumSelect(forum)}
+                  onContextMenu={(e) => isAdmin && handleForumRightClick(e, forum)}
+                >
+                  <span className="forum-name">{forum.forumName}</span>
+                  <span className="forum-time">
+                    {new Date(forum.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
         {/* Center Panel - Messages */}
         <div className="messages-panel">
-          <div className="messages-container">
-            {messages.map(message => (
-              <div
-                key={message.id}
-                className={`message ${message.isSystem ? 'system-message' : ''} ${message.removed ? 'removed-message' : ''} ${highlightedMessages.has(message.id) ? 'highlighted' : ''}`}
-                onContextMenu={(e) => handleMessageRightClick(e, message)}
-              >
-                {!message.isSystem && !message.removed && (
-                  <div className="message-header">
-                    <div className="message-avatar">
-                      {message.senderName.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="message-info">
-                      <span className="message-sender">{message.senderName}</span>
-                      <span className="message-time">
-                        {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      {message.isEdited && <span className="edited-indicator">(edited)</span>}
-                    </div>
-                  </div>
-                )}
-                <div className="message-content">
-                  {editingMessage === message.id ? (
-                    <div className="edit-message-form">
-                      <input
-                        type="text"
-                        value={editText}
-                        onChange={(e) => setEditText(e.target.value)}
-                        className="edit-input"
-                        autoFocus
-                      />
-                      <div className="edit-actions">
-                        <button onClick={handleSaveEdit} className="save-btn">Save</button>
-                        <button onClick={() => setEditingMessage(null)} className="cancel-btn">Cancel</button>
-                      </div>
-                    </div>
-                  ) : (
-                    <p>{message.content}</p>
-                  )}
-                </div>
-              </div>
-            ))}
-            <div ref={messagesEndRef} />
-            {showMentionSuggestions && (
-              <div className="mention-suggestions">
-                {mentionSuggestions.map((member, index) => (
+          {selectedForum ? (
+            <>
+              <div className="messages-container">
+                {messages.map(message => (
                   <div
-                    key={member.userId}
-                    className={`mention-suggestion ${index === mentionIndex ? 'active' : ''}`}
-                    onClick={() => handleMentionSelect(member)}
+                    key={message.id}
+                    className={`message ${message.isSystem ? 'system-message' : ''} ${message.removed ? 'removed-message' : ''} ${highlightedMessages.has(message.id) ? 'highlighted' : ''}`}
+                    onContextMenu={(e) => handleMessageRightClick(e, message)}
                   >
-                    <div className="mention-avatar">{member.name.charAt(0).toUpperCase()}</div>
-                    <div className="mention-info">
-                      <div className="mention-name">{member.name}</div>
-                      <div className="mention-role">{member.role}</div>
+                    {!message.isSystem && !message.removed && (
+                      <div className="message-header">
+                        <div className="message-avatar">
+                          {message.senderName?.charAt(0)?.toUpperCase() || '?'}
+                        </div>
+                        <div className="message-info">
+                          <span className="message-sender">{message.senderName || 'Unknown'}</span>
+                          <span className="message-time">
+                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          {message.isEdited && <span className="edited-indicator">(edited)</span>}
+                        </div>
+                      </div>
+                    )}
+                    <div className="message-content">
+                      {editingMessage === message.id ? (
+                        <div className="edit-message-form">
+                          <input
+                            type="text"
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            className="edit-input"
+                            autoFocus
+                          />
+                          <div className="edit-actions">
+                            <button onClick={handleSaveEdit} className="save-btn">Save</button>
+                            <button onClick={() => setEditingMessage(null)} className="cancel-btn">Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p>{message.content}</p>
+                      )}
                     </div>
                   </div>
                 ))}
+                <div ref={messagesEndRef} />
+                {showMentionSuggestions && (
+                  <div className="mention-suggestions">
+                    {mentionSuggestions.map((member, index) => (
+                      <div
+                        key={member.userId}
+                        className={`mention-suggestion ${index === mentionIndex ? 'active' : ''}`}
+                        onClick={() => handleMentionSelect(member)}
+                      >
+                        <div className="mention-avatar">{(member.name || member.userName || '?')?.charAt(0)?.toUpperCase()}</div>
+                        <div className="mention-info">
+                          <div className="mention-name">{member.name || member.userName || 'Unknown'}</div>
+                          <div className="mention-role">{member.role}</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Message Input */}
-          <div className="message-input-container">
-            <form onSubmit={handleSendMessage} className="message-form">
-              <button type="button" className="attach-btn">+</button>
-              <input
-                type="text"
-                value={newMessage}
-                onChange={handleInputChange}
-                onKeyDown={(e) => {
-                  if (showMentionSuggestions) {
-                    if (e.key === 'ArrowDown') {
-                      e.preventDefault();
-                      setMentionIndex(prev => (prev + 1) % mentionSuggestions.length);
-                    } else if (e.key === 'ArrowUp') {
-                      e.preventDefault();
-                      setMentionIndex(prev => prev === 0 ? mentionSuggestions.length - 1 : prev - 1);
-                    } else if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      if (mentionSuggestions[mentionIndex]) {
-                        handleMentionSelect(mentionSuggestions[mentionIndex]);
+              {/* Message Input */}
+              <div className="message-input-container">
+                <form onSubmit={handleSendMessage} className="message-form">
+                  <button type="button" className="attach-btn">+</button>
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={handleInputChange}
+                    onKeyDown={(e) => {
+                      if (showMentionSuggestions) {
+                        if (e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          setMentionIndex(prev => (prev + 1) % mentionSuggestions.length);
+                        } else if (e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          setMentionIndex(prev => prev === 0 ? mentionSuggestions.length - 1 : prev - 1);
+                        } else if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          if (mentionSuggestions[mentionIndex]) {
+                            handleMentionSelect(mentionSuggestions[mentionIndex]);
+                          }
+                        } else if (e.key === 'Escape') {
+                          setShowMentionSuggestions(false);
+                        }
                       }
-                    } else if (e.key === 'Escape') {
-                      setShowMentionSuggestions(false);
-                    }
-                  }
-                }}
-                placeholder="Type a message..."
-                className="message-input"
-              />
-              <button type="submit" className="send-btn">Send</button>
-            </form>
-          </div>
+                    }}
+                    placeholder="Type a message... (use @ to mention)"
+                    className="message-input"
+                  />
+                  <button type="submit" className="send-btn">Send</button>
+                </form>
+              </div>
+            </>
+          ) : (
+            <div className="no-forum-selected">
+              <div className="no-forum-content">
+                <div className="no-forum-icon">💬</div>
+                <h3>Select a Forum to Start Chatting</h3>
+                <p>Choose a forum from the left panel to view and participate in discussions.</p>
+                {forums.length === 0 && isAdmin && (
+                  <div className="create-forum-prompt">
+                    <p>As an organizer, you can create forums to enable team communication.</p>
+                    <button 
+                      className="create-forum-btn-large"
+                      onClick={() => setShowCreateForumModal(true)}
+                    >
+                      Create First Forum
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Right Panel - Members */}
@@ -484,10 +577,10 @@ const ChatInterface = () => {
               {members.map(member => (
                 <div key={member.userId} className="member-item">
                   <div className="member-avatar">
-                    {member.name.charAt(0).toUpperCase()}
+                    {member.name || member.userName || '?'}
                   </div>
                   <div className="member-info">
-                    <span className="member-name">{member.name}</span>
+                    <span className="member-name">{member.name || member.userName || 'Unknown'}</span>
                     <span className={`member-status ${member.online ? 'online' : 'offline'}`}>
                       {member.online ? '●' : '○'}
                     </span>
@@ -583,6 +676,114 @@ const ChatInterface = () => {
           <button>Manage Permissions</button>
           <button>Export Chat</button>
           <button onClick={() => setShowAdminMenu(false)}>Close</button>
+        </div>
+      )}
+
+      {/* Create Forum Modal */}
+      {showCreateForumModal && (
+        <div className="modal-overlay">
+          <div className="create-forum-modal">
+            <div className="modal-header">
+              <h3>Create New Forum</h3>
+              <button 
+                className="close-btn"
+                onClick={() => {
+                  setShowCreateForumModal(false);
+                  setCreateForumName('');
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="forum-name">Forum Name</label>
+                <input
+                  id="forum-name"
+                  type="text"
+                  value={createForumName}
+                  onChange={(e) => setCreateForumName(e.target.value)}
+                  placeholder="Enter forum name..."
+                  className="forum-name-input"
+                  autoFocus
+                />
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="cancel-btn"
+                onClick={() => {
+                  setShowCreateForumModal(false);
+                  setCreateForumName('');
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="create-btn"
+                onClick={handleCreateForum}
+                disabled={!createForumName.trim()}
+              >
+                Create Forum
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Member Modal */}
+      {showAddMemberModal && (
+        <div className="modal-overlay">
+          <div className="add-member-modal">
+            <div className="modal-header">
+              <h3>Add Member to Forum</h3>
+              <button 
+                className="close-btn"
+                onClick={() => {
+                  setShowAddMemberModal(false);
+                  setAddMemberUserId('');
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="form-group">
+                <label htmlFor="member-user-id">User ID</label>
+                <input
+                  id="member-user-id"
+                  type="text"
+                  value={addMemberUserId}
+                  onChange={(e) => setAddMemberUserId(e.target.value)}
+                  placeholder="Enter user ID to add..."
+                  className="member-id-input"
+                  autoFocus
+                />
+              </div>
+              <div className="form-info">
+                <p className="info-text">Enter the User ID of the person you want to add to this forum.</p>
+                <p className="info-text">The user must already be registered in the system.</p>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="cancel-btn"
+                onClick={() => {
+                  setShowAddMemberModal(false);
+                  setAddMemberUserId('');
+                }}
+              >
+                Cancel
+              </button>
+              <button 
+                className="add-btn"
+                onClick={handleAddMember}
+                disabled={!addMemberUserId.trim()}
+              >
+                Add Member
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

@@ -2,6 +2,7 @@ package com.eventplanning.backend.groupchat;
 
 import jakarta.validation.Valid;
 import java.util.List;
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,5 +31,12 @@ public class ForumController {
     @GetMapping("/group-chat/{groupChatId}")
     public List<ForumResponse> getGroupChatForums(@PathVariable Long groupChatId) {
         return forumService.getGroupChatForums(groupChatId);
+    }
+
+    @PostMapping("/{forumId}/members")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ChatMemberResponse addMemberToForum(@PathVariable Long forumId, @RequestBody Map<String, Long> request) {
+        Long userId = request.get("userId");
+        return forumService.addMemberToForum(forumId, userId);
     }
 }

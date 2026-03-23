@@ -21,6 +21,11 @@ public class GroupChatController {
         this.groupChatService = groupChatService;
     }
 
+    @GetMapping("/event/{eventId}")
+    public GroupChatResponse getEventGroupChat(@PathVariable Long eventId) {
+        return groupChatService.getEventGroupChat(eventId);
+    }
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     public GroupChatResponse createGroupChat(@Valid @RequestBody CreateGroupChatRequest request) {
