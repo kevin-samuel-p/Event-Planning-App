@@ -269,6 +269,11 @@ export const chatAPI = {
     return response.data;
   },
 
+  deleteGcMessage: async (messageId) => {
+    const response = await api.delete(`/messages/gc/${messageId}`);
+    return response.data;
+  },
+
   createDirectMessage: async (messageData) => {
     const response = await api.post('/messages/direct', messageData);
     return response.data;

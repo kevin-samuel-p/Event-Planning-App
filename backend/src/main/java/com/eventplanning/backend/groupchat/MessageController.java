@@ -3,6 +3,7 @@ package com.eventplanning.backend.groupchat;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,6 +31,13 @@ public class MessageController {
     @GetMapping("/gc/forum/{forumId}")
     public List<GcMessageResponse> getForumMessages(@PathVariable Long forumId) {
         return messageService.getForumMessages(forumId);
+    }
+
+    @DeleteMapping("/gc/{messageId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteGcMessage(@PathVariable Long messageId) {
+        System.out.println("DELETE endpoint called for message ID: " + messageId);
+        messageService.deleteGcMessage(messageId);
     }
 
     @PostMapping("/direct")

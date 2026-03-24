@@ -73,18 +73,18 @@ public class ForumService {
         ChatMember currentUserMember = chatMemberRepository.findByGroupChatIdAndUserId(groupChat.getId(), currentUser.getId())
                 .orElseThrow(() -> new IllegalStateException("Not a member of this group chat"));
         
-        // Check if user is already a member of this forum
-        if (chatMemberRepository.findByForumIdAndUserId(forumId, userId).isPresent()) {
-            throw new IllegalStateException("User is already a member of this forum");
+        // Check if user is already a member of this group chat (which gives access to all forums)
+        if (chatMemberRepository.findByGroupChatIdAndUserId(groupChat.getId(), userId).isPresent()) {
+            throw new IllegalStateException("User is already a member of this group chat");
         }
 
         // Find the user to add
         User userToAdd = userRepository.findById(userId)
                 .orElseThrow(() -> new NotFoundException("User not found"));
 
-        // Add user to forum (create new ChatMember)
+        // Add user to group chat (which gives access to all forums in the group chat)
         ChatMember newMember = chatMemberRepository.save(ChatMember.builder()
-                .forum(forum)
+                .groupChat(groupChat)
                 .user(userToAdd)
                 .joinedAt(java.time.LocalDate.now())
                 .build());

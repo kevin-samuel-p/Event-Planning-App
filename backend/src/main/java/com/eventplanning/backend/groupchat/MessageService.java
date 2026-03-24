@@ -70,6 +70,25 @@ public class MessageService {
         return messages.stream().map(GcMessageResponse::from).toList();
     }
 
+    public void deleteGcMessage(Long messageId) {
+        System.out.println("Attempting to delete message with ID: " + messageId);
+        var currentUser = currentUserProvider.requireCurrentUser();
+        
+        GcMessage message = gcMessageRepository.findById(messageId)
+                .orElseThrow(() -> new NotFoundException("Message not found"));
+
+        // Check if user is the message sender or an admin
+        boolean isSender = message.getMember().getUser().getId().equals(currentUser.getId());
+        boolean isAdmin = currentUser.getRole().toString().equals("ORGANIZER");
+        
+        if (!isSender && !isAdmin) {
+            throw new IllegalStateException("You can only delete your own messages");
+        }
+
+        gcMessageRepository.delete(message);
+        System.out.println("Successfully deleted message with ID: " + messageId);
+    }
+
     public DirectMessageResponse createDirectMessage(CreateDirectMessageRequest request) {
         var currentUser = currentUserProvider.requireCurrentUser();
         

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { chatAPI } from '../services/api';
+import { chatAPI, eventAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import './ChatInterface.css';
 
@@ -31,7 +31,9 @@ const ChatInterface = () => {
   const [showCreateForumModal, setShowCreateForumModal] = useState(false);
   const [createForumName, setCreateForumName] = useState('');
   const [showAddMemberModal, setShowAddMemberModal] = useState(false);
-  const [addMemberUserId, setAddMemberUserId] = useState('');
+  const [addMemberUserName, setAddMemberUserName] = useState('');
+  const [availableUsers, setAvailableUsers] = useState([]);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   
   const messagesEndRef = useRef(null);
 
@@ -132,17 +134,40 @@ const ChatInterface = () => {
     }
   };
 
-  const handleAddMember = async () => {
-    if (!addMemberUserId.trim()) return;
-    
+  const handleAddMemberClick = () => {
+    setShowAddMemberModal(true);
+    fetchAvailableUsers();
+  };
+
+  const fetchAvailableUsers = async () => {
     try {
-      const newMember = await chatAPI.addMemberToForum(selectedForum.id, addMemberUserId);
-      setMembers(prev => [...prev, newMember]);
-      setAddMemberUserId('');
-      setShowAddMemberModal(false);
-    } catch (err) {
-      console.error('Failed to add member:', err);
-      setError('Failed to add member. Please try again.');
+      console.log('Starting fetchAvailableUsers...'); // Debug
+      const allUsers = await eventAPI.getAllTeamMembers();
+      console.log('Raw API response:', allUsers); // Debug
+      console.log('API response type:', typeof allUsers); // Debug
+      console.log('API response length:', allUsers?.length); // Debug
+      
+      const currentMemberIds = members.map(member => member.userId).filter(id => id != null);
+      console.log('Current member IDs:', currentMemberIds); // Debug
+      console.log('Current members array:', members); // Debug
+      
+      const availableUsers = (allUsers || []).filter(user => {
+        console.log('Processing user:', user); // Debug
+        const isValid = user && 
+          user.id && 
+          user.name &&
+          !currentMemberIds.includes(user.id);
+        console.log('User validation - isValid:', isValid, 'userId:', user?.id, 'name:', user?.name); // Debug
+        return isValid;
+      });
+      
+      console.log('Final available users:', availableUsers); // Debug
+      console.log('Available users count:', availableUsers.length); // Debug
+      setAvailableUsers(availableUsers);
+    } catch (error) {
+      console.error('Failed to fetch available users:', error);
+      console.error('Error details:', error.response?.data || error.message); // Debug
+      setAvailableUsers([]);
     }
   };
 
@@ -181,6 +206,7 @@ const ChatInterface = () => {
 
       // Send message via API
       const response = await chatAPI.sendGcMessage(messageData);
+      console.log('Message response:', response); // Debug log
       
       // Add the new message to the local state
       setMessages(prev => [...prev, response]);
@@ -211,21 +237,30 @@ const ChatInterface = () => {
     const lastAtIndex = textBeforeCursor.lastIndexOf('@');
     
     if (lastAtIndex !== -1) {
+      // Get text after @ and before cursor
       const mentionText = textBeforeCursor.substring(lastAtIndex + 1);
       const spaceIndex = mentionText.indexOf(' ');
       const currentMention = spaceIndex === -1 ? mentionText : mentionText.substring(0, spaceIndex);
       
-      if (currentMention.length > 0) {
-        const filteredMembers = members.filter(member => 
-          (member.name || member.userName || '').toLowerCase().includes(currentMention.toLowerCase())
-        );
+      console.log('Mention detected:', { mentionText, currentMention, spaceIndex }); // Debug
+      
+      if (currentMention && currentMention.length > 0) {
+        const filteredMembers = members.filter(member => {
+          const memberName = (member.name || member.userName || '').toLowerCase();
+          return memberName.includes(currentMention.toLowerCase());
+        });
+        console.log('Filtered members:', filteredMembers); // Debug
         setMentionSuggestions(filteredMembers);
         setShowMentionSuggestions(true);
         setMentionIndex(0);
-      } else {
+      } else if (currentMention === '') {
+        // When @ is typed but no text yet, show all members
+        console.log('Showing all members for empty mention'); // Debug
         setMentionSuggestions(members);
         setShowMentionSuggestions(true);
         setMentionIndex(0);
+      } else {
+        setShowMentionSuggestions(false);
       }
     } else {
       setShowMentionSuggestions(false);
@@ -256,14 +291,14 @@ const ChatInterface = () => {
 
   const handleEditMessage = (message) => {
     setEditingMessage(message.id);
-    setEditText(message.content);
+    setEditText(message.message);
   };
 
   const handleSaveEdit = async () => {
     try {
       setMessages(messages.map(msg => 
         msg.id === editingMessage 
-          ? { ...msg, content: editText, isEdited: true }
+          ? { ...msg, message: editText, isEdited: true }
           : msg
       ));
 
@@ -271,9 +306,9 @@ const ChatInterface = () => {
       const systemMsg = {
         id: messages.length + 1,
         forumId: selectedForum.id,
-        senderId: 0,
-        senderName: 'System',
-        content: `${user.name} changed their message`,
+        memberId: 0,
+        memberName: 'System',
+        message: `${user.name} changed their message`,
         timestamp: new Date().toISOString(),
         isEdited: false,
         isSystem: true
@@ -289,23 +324,12 @@ const ChatInterface = () => {
 
   const handleDeleteMessage = async (messageId) => {
     try {
+      await chatAPI.deleteGcMessage(messageId);
       setMessages(messages.filter(msg => msg.id !== messageId));
       setShowMessageMenu(null);
     } catch (error) {
       console.error('Failed to delete message:', error);
-    }
-  };
-
-  const handleRemoveMessage = async (messageId) => {
-    try {
-      setMessages(messages.map(msg => 
-        msg.id === messageId 
-          ? { ...msg, content: 'This message was removed by an admin', removed: true }
-          : msg
-      ));
-      setShowMessageMenu(null);
-    } catch (error) {
-      console.error('Failed to remove message:', error);
+      setError('Failed to delete message. Please try again.');
     }
   };
 
@@ -327,9 +351,9 @@ const ChatInterface = () => {
       const systemMsg = {
         id: messages.length + 1,
         forumId: selectedForum.id,
-        senderId: 0,
-        senderName: 'System',
-        content: `${user.name} changed the forum title from "${oldName}" to "${newForumName}"`,
+        memberId: 0,
+        memberName: 'System',
+        message: `${user.name} changed the forum title from "${oldName}" to "${newForumName}"`,
         timestamp: new Date().toISOString(),
         isEdited: false,
         isSystem: true
@@ -355,11 +379,10 @@ const ChatInterface = () => {
   };
 
   const isAdmin = user.role === 'ORGANIZER';
-  const isOwnMessage = (message) => message.senderId === user.id;
+  const isOwnMessage = (message) => message.memberId === user.id;
 
   return (
     <div className="chat-interface">
-      {/* Header */}
       <div className="chat-header">
         <div className="header-left">
           <h3>{selectedForum?.forumName || 'Select a forum'}</h3>
@@ -386,20 +409,11 @@ const ChatInterface = () => {
           <div className="forums-header">
             <h4>Forums</h4>
             <div className="forum-actions">
-              {isAdmin && (
-                <button 
-                  className="add-member-btn"
-                  onClick={() => setShowAddMemberModal(true)}
-                  title="Add member to forum"
-                  disabled={!selectedForum}
-                >
-                  + Add
-                </button>
-              )}
               <button 
                 className="create-forum-btn"
                 onClick={() => setShowCreateForumModal(true)}
                 title="Create new forum"
+                disabled={!selectedForum}
               >
                 +
               </button>
@@ -445,47 +459,51 @@ const ChatInterface = () => {
           {selectedForum ? (
             <>
               <div className="messages-container">
-                {messages.map(message => (
-                  <div
-                    key={message.id}
-                    className={`message ${message.isSystem ? 'system-message' : ''} ${message.removed ? 'removed-message' : ''} ${highlightedMessages.has(message.id) ? 'highlighted' : ''}`}
-                    onContextMenu={(e) => handleMessageRightClick(e, message)}
-                  >
-                    {!message.isSystem && !message.removed && (
-                      <div className="message-header">
-                        <div className="message-avatar">
-                          {message.senderName?.charAt(0)?.toUpperCase() || '?'}
-                        </div>
-                        <div className="message-info">
-                          <span className="message-sender">{message.senderName || 'Unknown'}</span>
-                          <span className="message-time">
-                            {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </span>
-                          {message.isEdited && <span className="edited-indicator">(edited)</span>}
-                        </div>
-                      </div>
-                    )}
-                    <div className="message-content">
-                      {editingMessage === message.id ? (
-                        <div className="edit-message-form">
-                          <input
-                            type="text"
-                            value={editText}
-                            onChange={(e) => setEditText(e.target.value)}
-                            className="edit-input"
-                            autoFocus
-                          />
-                          <div className="edit-actions">
-                            <button onClick={handleSaveEdit} className="save-btn">Save</button>
-                            <button onClick={() => setEditingMessage(null)} className="cancel-btn">Cancel</button>
+                {console.log('Rendering messages:', messages)} {/* Debug log */}
+                {messages.map(message => {
+                  console.log('Rendering message:', message); // Debug log
+                  return (
+                    <div
+                      key={message.id}
+                      className={`message ${message.isSystem || false ? 'system-message' : ''} ${message.removed || false ? 'removed-message' : ''} ${highlightedMessages.has(message.id) ? 'highlighted' : ''}`}
+                      onContextMenu={(e) => handleMessageRightClick(e, message)}
+                    >
+                      {!(message.isSystem || false) && !(message.removed || false) && (
+                        <div className="message-header">
+                          <div className="message-avatar">
+                            {message.memberName?.charAt(0)?.toUpperCase() || '?'}
+                          </div>
+                          <div className="message-info">
+                            <span className="message-sender">{message.memberName || 'Unknown'}</span>
+                            <span className="message-time">
+                              {new Date(message.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </span>
+                            {message.isEdited && <span className="edited-indicator">(edited)</span>}
                           </div>
                         </div>
-                      ) : (
-                        <p>{message.content}</p>
                       )}
+                      <div className="message-content">
+                        {editingMessage === message.id ? (
+                          <div className="edit-message-form">
+                            <input
+                              type="text"
+                              value={editText}
+                              onChange={(e) => setEditText(e.target.value)}
+                              className="edit-input"
+                              autoFocus
+                            />
+                            <div className="edit-actions">
+                              <button onClick={handleSaveEdit} className="save-btn">Save</button>
+                              <button onClick={() => setEditingMessage(null)} className="cancel-btn">Cancel</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p>{message.message}</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
                 <div ref={messagesEndRef} />
                 {showMentionSuggestions && (
                   <div className="mention-suggestions">
@@ -505,40 +523,39 @@ const ChatInterface = () => {
                   </div>
                 )}
               </div>
-
-              {/* Message Input */}
-              <div className="message-input-container">
-                <form onSubmit={handleSendMessage} className="message-form">
-                  <button type="button" className="attach-btn">+</button>
-                  <input
-                    type="text"
-                    value={newMessage}
-                    onChange={handleInputChange}
-                    onKeyDown={(e) => {
-                      if (showMentionSuggestions) {
-                        if (e.key === 'ArrowDown') {
-                          e.preventDefault();
-                          setMentionIndex(prev => (prev + 1) % mentionSuggestions.length);
-                        } else if (e.key === 'ArrowUp') {
-                          e.preventDefault();
-                          setMentionIndex(prev => prev === 0 ? mentionSuggestions.length - 1 : prev - 1);
-                        } else if (e.key === 'Enter' && !e.shiftKey) {
-                          e.preventDefault();
-                          if (mentionSuggestions[mentionIndex]) {
-                            handleMentionSelect(mentionSuggestions[mentionIndex]);
-                          }
-                        } else if (e.key === 'Escape') {
-                          setShowMentionSuggestions(false);
+            {/* Message Input */}
+            <div className="message-input-container">
+              <form onSubmit={handleSendMessage} className="message-form">
+                <button type="button" className="attach-btn">+</button>
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                    if (showMentionSuggestions) {
+                      if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        setMentionIndex(prev => (prev + 1) % mentionSuggestions.length);
+                      } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        setMentionIndex(prev => prev === 0 ? mentionSuggestions.length - 1 : prev - 1);
+                      } else if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        if (mentionSuggestions[mentionIndex]) {
+                          handleMentionSelect(mentionSuggestions[mentionIndex]);
                         }
+                      } else if (e.key === 'Escape') {
+                        setShowMentionSuggestions(false);
                       }
-                    }}
-                    placeholder="Type a message... (use @ to mention)"
-                    className="message-input"
-                  />
-                  <button type="submit" className="send-btn">Send</button>
-                </form>
-              </div>
-            </>
+                    }
+                  }}
+                  placeholder="Type a message... (use @ to mention)"
+                  className="message-input"
+                />
+                <button type="submit" className="send-btn">Send</button>
+              </form>
+            </div>
+                                    </>
           ) : (
             <div className="no-forum-selected">
               <div className="no-forum-content">
@@ -565,12 +582,18 @@ const ChatInterface = () => {
         <div className={`members-panel ${showMembersPanel ? 'show' : 'hide'}`}>
           <div className="members-header">
             <h4>Members</h4>
-            <button 
-              className="toggle-panel-btn"
-              onClick={() => setShowMembersPanel(!showMembersPanel)}
-            >
-              {showMembersPanel ? '◀' : '▶'}
-            </button>
+            <div className="members-actions">
+              {isAdmin && (
+                <button 
+                  className="add-member-btn"
+                  onClick={handleAddMemberClick}
+                  title="Add member to group chat"
+                  disabled={!selectedForum}
+                >
+                  + Add
+                </button>
+              )}
+            </div>
           </div>
           {showMembersPanel && (
             <div className="members-list">
@@ -590,6 +613,16 @@ const ChatInterface = () => {
             </div>
           )}
         </div>
+
+        {/* Fixed Toggle Button */}
+        <button 
+          className="members-panel-toggle"
+          onClick={() => setShowMembersPanel(!showMembersPanel)}
+          title={showMembersPanel ? "Hide members panel" : "Show members panel"}
+        >
+          {showMembersPanel ? '◀' : '▶'}
+        </button>
+
       </div>
 
       {/* Context Menus */}
@@ -632,7 +665,7 @@ const ChatInterface = () => {
           )}
           {isAdmin && !isOwnMessage(showMessageMenu.message) && (
             <button onClick={() => {
-              handleRemoveMessage(showMessageMenu.message.id);
+              handleDeleteMessage(showMessageMenu.message.id);
               setShowMessageMenu(null);
             }}>
               Remove Message
@@ -736,12 +769,13 @@ const ChatInterface = () => {
         <div className="modal-overlay">
           <div className="add-member-modal">
             <div className="modal-header">
-              <h3>Add Member to Forum</h3>
+              <h3>Add Member to Group Chat</h3>
               <button 
                 className="close-btn"
                 onClick={() => {
                   setShowAddMemberModal(false);
-                  setAddMemberUserId('');
+                  setAddMemberUserName('');
+                  setShowUserDropdown(false);
                 }}
               >
                 ✕
@@ -749,20 +783,84 @@ const ChatInterface = () => {
             </div>
             <div className="modal-body">
               <div className="form-group">
-                <label htmlFor="member-user-id">User ID</label>
-                <input
-                  id="member-user-id"
-                  type="text"
-                  value={addMemberUserId}
-                  onChange={(e) => setAddMemberUserId(e.target.value)}
-                  placeholder="Enter user ID to add..."
-                  className="member-id-input"
-                  autoFocus
-                />
+                <label htmlFor="member-user-name">User Name</label>
+                <div style={{position: 'relative'}}>
+                  <input
+                    id="member-user-name"
+                    type="text"
+                    value={addMemberUserName}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setAddMemberUserName(value);
+                      console.log('Input value:', value); // Debug
+                      console.log('Should show dropdown:', value.trim().length > 0); // Debug
+                      setShowUserDropdown(value.trim().length > 0);
+                    }}
+                    placeholder="Type to search users..."
+                    className="member-name-input"
+                    autoFocus
+                  />
+                  {showUserDropdown && console.log('Dropdown should be visible!')} {/* Debug */}
+                  {showUserDropdown && (
+                    <div className="user-dropdown" style={{
+                      position: 'absolute', 
+                      top: '100%', 
+                      left: 0, 
+                      right: 0, 
+                      backgroundColor: 'white', 
+                      border: '1px solid #ccc', 
+                      zIndex: 1000,
+                      maxHeight: '200px',
+                      overflowY: 'auto',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+                    }}>
+                    {availableUsers
+                      .filter(user => {
+                        if (!user || !user.name) return false;
+                        
+                        // Show all users if input is empty, otherwise filter
+                        if (addMemberUserName.trim() === '') {
+                          return true;
+                        }
+                        
+                        return user.name.toLowerCase().includes(addMemberUserName.toLowerCase());
+                      })
+                      .slice(0, 5)
+                      .map(user => (
+                        <div
+                          key={user.id}
+                          className="user-dropdown-item"
+                          onClick={() => {
+                            setAddMemberUserName(user.name);
+                            setShowUserDropdown(false);
+                          }}
+                          style={{padding: '10px', cursor: 'pointer', borderBottom: '1px solid #eee', backgroundColor: 'white'}}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                        >
+                          <div className="dropdown-user-info">
+                            <span className="dropdown-user-name">
+                              {user.name}
+                            </span>
+                            <span className="dropdown-user-role">
+                              {user.email || 'Vendor'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    {availableUsers.length === 0 && (
+                      <div style={{padding: '10px', textAlign: 'center', color: '#666'}}>
+                        No users available to add
+                      </div>
+                    )}
+                  </div>
+                )}
+                </div>
               </div>
               <div className="form-info">
-                <p className="info-text">Enter the User ID of the person you want to add to this forum.</p>
-                <p className="info-text">The user must already be registered in the system.</p>
+                <p className="info-text">Search for and select a user to add to this group chat.</p>
+                <p className="info-text">Only users not already in this forum can be added.</p>
+                <p className="info-text">The user must be registered in the system.</p>
               </div>
             </div>
             <div className="modal-footer">
@@ -770,15 +868,52 @@ const ChatInterface = () => {
                 className="cancel-btn"
                 onClick={() => {
                   setShowAddMemberModal(false);
-                  setAddMemberUserId('');
+                  setAddMemberUserName('');
+                  setShowUserDropdown(false);
                 }}
               >
                 Cancel
               </button>
               <button 
                 className="add-btn"
-                onClick={handleAddMember}
-                disabled={!addMemberUserId.trim()}
+                onClick={async () => {
+                  console.log('Add Member button clicked!'); // Debug
+                  console.log('Current input:', addMemberUserName); // Debug
+                  console.log('Available users:', availableUsers); // Debug
+                  
+                  if (!addMemberUserName.trim()) {
+                    console.log('Returning early - empty input'); // Debug
+                    return;
+                  }
+                  
+                  const selectedUser = availableUsers.find(user => 
+                    user && 
+                    user.name &&
+                    user.name.toLowerCase().includes(addMemberUserName.toLowerCase())
+                  );
+                  
+                  console.log('Selected user:', selectedUser); // Debug
+                  
+                  if (!selectedUser) {
+                    console.log('No user found - showing error'); // Debug
+                    setError('Please select a valid user from the dropdown');
+                    return;
+                  }
+
+                  console.log('Calling API to add member...'); // Debug
+                  try {
+                    const newMember = await chatAPI.addMemberToForum(selectedForum.id, selectedUser.id);
+                    console.log('API response:', newMember); // Debug
+                    setMembers(prev => [...prev, newMember]);
+                    setAddMemberUserName('');
+                    setShowUserDropdown(false);
+                    setShowAddMemberModal(false);
+                  } catch (err) {
+                    console.error('Failed to add member:', err);
+                    setError('Failed to add member to group chat. Please try again.');
+                  }
+                }}
+                disabled={!addMemberUserName.trim()}
               >
                 Add Member
               </button>
